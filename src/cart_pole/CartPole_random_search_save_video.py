@@ -1,6 +1,8 @@
 from __future__ import print_function, nested_scopes, generators, division
 from builtins import range
 
+import os
+from datetime import datetime
 import gym
 from gym import wrappers
 import numpy as np
@@ -18,7 +20,7 @@ def play_one_episode(env, params, is_render=False):
 
     while not done and t < 10000:
         if is_render:
-          env.render() # debugging ------------
+            env.render()  # debugging ------------
 
         t += 1
         action = get_action(observation, params)
@@ -53,13 +55,15 @@ def random_search(env):
             best = avg_length
     return episode_lengths, params
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     episode_lengths, params = random_search(env)
     plt.plot(episode_lengths)
     plt.show()
 
     print('final run with final weights')
-    env = wrappers.Monitor(env, '../model/video')
+    filename = os.path.basename(__file__).split('.')[0]
+    monitor_dir = '../../model/video/' + filename + '_' + str(datetime.now())
+    env = wrappers.Monitor(env, monitor_dir)
     play_one_episode(env, params)
-
