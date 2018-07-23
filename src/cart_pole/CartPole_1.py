@@ -1,3 +1,6 @@
+#! python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function, nested_scopes, generators, division
 import gym
 
