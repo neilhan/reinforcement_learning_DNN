@@ -191,3 +191,4 @@ if __name__ == '__main__':
 
     plot_running_avg(total_rewards)
     plot_cost_to_go(env, model)
+
