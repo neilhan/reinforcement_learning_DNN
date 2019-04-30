@@ -113,7 +113,10 @@ def play_one_episode(model, eps, gamma):
     return totalreward
 
 
-def plot_running_avg(totalrewards):
+def plot_total_rewards_n_running_avg(totalrewards):
+    plt.plot(totalrewards)
+    plt.title('Rewards')
+
     N = len(totalrewards)
     running_avg = np.empty(N)
     for t in range(N):
@@ -130,7 +133,7 @@ def record_video(env):
     return env
 
 
-if __name__ == '__main__':
+def main():
     env = gym.make('CartPole-v0')
     ft = FeatureTransformer()
     model = Model(env, ft)
@@ -154,7 +157,7 @@ if __name__ == '__main__':
     model.env = env_video
     play_one_episode(model, 0, gamma)
 
-    plt.plot(totalrewards)
-    plt.title('Rewards')
+    plot_total_rewards_n_running_avg(totalrewards)
 
-    plot_running_avg(totalrewards)
+if __name__ == '__main__':
+    main()

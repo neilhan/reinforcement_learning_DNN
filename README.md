@@ -18,11 +18,9 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
 # notes
 
 ```
-pip freeze > requirements.txt
-
 python -m venv env
-
 source env/bin/activate
 pip install -r requirements.txt
-deactivate
+
+pip freeze > requirements.txt
 ```
