@@ -1,9 +1,6 @@
 #! python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, nested_scopes, generators, division
-from builtins import range
-
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +15,7 @@ def play_one_episode(env, params, is_render=False):
     done = False
     t = 0
 
-    while not done and t < 10000:
+    while not done and t < 1000:
         if is_render:
           env.render() # debugging ------------
 
@@ -55,12 +52,16 @@ def random_search(env):
             best = avg_length
     return episode_lengths, params
 
-if __name__=='__main__':
+
+def main():
     env = gym.make('CartPole-v0')
     episode_lengths, params = random_search(env)
     plt.plot(episode_lengths)
     plt.show()
 
     print('final run with final weights')
-    play_multiple_episodes(env, 100, params, True)
+    play_multiple_episodes(env, 10, params, True)
 
+
+if __name__=='__main__':
+    main()

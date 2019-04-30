@@ -1,5 +1,5 @@
-from __future__ import print_function, nested_scopes, generators, division
-from builtins import range
+#! python
+# -*- coding: utf-8 -*-
 
 import sys
 import os
@@ -65,6 +65,7 @@ class Model:
         return self.Q[x]  # of actions [q_0, q_1]
 
     def update(self, s, a, G):
+        # with a fixed learning rate
         x = self.feature_transformer.transform(s)
         self.Q[x, a] += 10e-3 * (G - self.Q[x, a])
 
@@ -87,7 +88,7 @@ def play_one_episode(model, eps, gamma):
     play one episode
     :param model: Model
     :param eps: epsilon, how much to explore
-    :param gamma: learning rate
+    :param gamma: decay factor for this new state
     :return:
     '''
     env = model.env

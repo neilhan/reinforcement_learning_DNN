@@ -1,5 +1,5 @@
-from __future__ import print_function, nested_scopes, generators, division
-from builtins import range
+#! python
+# -*- coding: utf-8 -*-
 
 import os
 from datetime import datetime
@@ -18,7 +18,7 @@ def play_one_episode(env, params, is_render=False):
     done = False
     t = 0
 
-    while not done and t < 10000:
+    while not done and t < 1000:
         if is_render:
             env.render()  # debugging ------------
 
@@ -56,7 +56,7 @@ def random_search(env):
     return episode_lengths, params
 
 
-if __name__ == '__main__':
+def main():
     env = gym.make('CartPole-v0')
     episode_lengths, params = random_search(env)
     plt.plot(episode_lengths)
@@ -67,3 +67,6 @@ if __name__ == '__main__':
     monitor_dir = '../../model/video/' + filename + '_' + str(datetime.now())
     env = wrappers.Monitor(env, monitor_dir)
     play_one_episode(env, params)
+
+if __name__ == '__main__':
+    main()
