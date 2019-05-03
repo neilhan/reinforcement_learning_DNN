@@ -128,7 +128,7 @@ def plot_total_rewards_n_running_avg(totalrewards):
 
 def record_video(env):
     filename = os.path.basename(__file__).split('.')[0]
-    monitor_dir = '../../model/video/' + filename + '_' + str(datetime.now())
+    monitor_dir = '../../model/video/cart_pole/' + filename + '_' + str(datetime.now())
     env = wrappers.Monitor(env, monitor_dir)
     return env
 

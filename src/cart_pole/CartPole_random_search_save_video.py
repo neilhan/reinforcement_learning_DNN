@@ -64,7 +64,8 @@ def main():
 
     print('final run with final weights')
     filename = os.path.basename(__file__).split('.')[0]
-    monitor_dir = '../../model/video/' + filename + '_' + str(datetime.now())
+    filedir = os.path.dirname(os.path.abspath(__file__))
+    monitor_dir = filedir + '/../../model/video/mountain_car/' + filename + '_' + str(datetime.now())
     env = wrappers.Monitor(env, monitor_dir)
     play_one_episode(env, params)
 

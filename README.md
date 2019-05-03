@@ -14,6 +14,10 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   - CartPole_random_search_save_video.py - create a video.
   - q_learn_bins.py - q-learning using the tabular method.
     Continuous states to discrete state, boxes.
+- mountain_car
+  Radial Basis Function, RBF activation neural network
+  SGDRegressor, Stochastic Gradient Descent
+  - q_learning.py - RBF network to solve mountain car
 
 # notes
 
@@ -23,4 +27,7 @@ source env/bin/activate
 pip install -r requirements.txt
 
 pip freeze > requirements.txt
+
+# trouble with pyYAML, versions older than 4.x were not safe
+pip3 install --ignore-installed PyYAML
 ```
