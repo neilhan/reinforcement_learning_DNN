@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.pipeline import FeatureUnion
 from sklearn.preprocessing import StandardScaler
 from sklearn.kernel_approximation import RBFSampler
-# from sklearn.linear_model import SGDRegressor
+from sklearn.linear_model import SGDRegressor
 
 import gym
 from gym import wrappers
@@ -24,7 +24,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # verbose=0, epsilon=0.1, random_state=None, learning_rate='invscaling',
 # eta0=0.01, power_t=0.25, warm_start=False, average=False
 
-class SGDRegressor:
+class SGDRegressor2:
     def __init__(self, **kwargs):
         self.w = None
         self.lr = 0.01
