@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 
 class SGDRegressorMy:
     def __init__(self, D):
+        '''
+        :param D: a int value, the dimensions of the input.
+        '''
         self.w = np.random.randn(D) / np.sqrt(D)
         self.lr = 10e-2
 
@@ -60,43 +63,24 @@ class FeatureTransformer:
         return self.featurizer.transform(scaled)
 
 
-def build_state(features):
-    '''
-    take list of int, to a int, [1,2,3] -> 123
-    :param features:
-    :return: int
-    '''
-    return int(''.join(map(lambda feature: str(int(feature)), features)))
-
-
-def to_bin(value, bins):
-    '''
-    return indexes of bins that each value belongs.
-    value is in put array. bins is array of bin_size.
-    :param value:
-    :param bins:
-    :return: array
-    '''
-    return np.digitize(x=[value], bins=bins)[0]
-
-
 class Model:
     def __init__(self, env, feature_transformer):
         self.env = env
         self.feature_transformer = feature_transformer
+        self.models = []
 
-        num_states = 10 ** env.observation_space.shape[0]
-        num_actions = env.action_space.n
-        self.Q = np.random.uniform(low=-1, high=1, size=(num_states, num_actions))
+        for i in range(env.action_space.n):
+            model = SGDRegressorMy(feature_transformer.dimensions)
+            self.models.append(model)
 
     def predict(self, s):
-        x = self.feature_transformer.transform(s)
-        return self.Q[x]  # of actions [q_0, q_1]
+        x = self.feature_transformer.transform(np.atleast_2d(s))
+        return np.array([m.predict(x)[0] for m in self.models])
 
     def update(self, s, a, G):
         # with a fixed learning rate
-        x = self.feature_transformer.transform(s)
-        self.Q[x, a] += 10e-3 * (G - self.Q[x, a])
+        x = self.feature_transformer.transform(np.atleast_2d(s))
+        self.models[a].partial_fit(x, [G])
 
     def sample_action(self, s, eps):
         '''
@@ -134,8 +118,9 @@ def play_one_episode(model, eps, gamma):
         if done and iters < 199:
             reward = -300
 
-        # update model, q-learning, update return-G
-        G = reward + gamma * np.max(model.predict(observation))  # New Return
+        # update model. for q-learning, update return-G
+        next = model.predict(observation)
+        G = reward + gamma * np.max(next)  # New Return
         model.update(prev_observation, action, G)
 
         iters += 1
@@ -164,25 +149,27 @@ def record_video(env):
 
 def main():
     env = gym.make('CartPole-v0')
-    ft = FeatureTransformer()
-    model = Model(env, ft)
-    gamma = 0.9
+    ftr = FeatureTransformer(env)
+    model = Model(env, ftr)
+    gamma = 0.99
 
+    env_video = record_video(env)
     if 'monitor' in sys.argv:
         env = env_video
 
-    N = 10000
+    N = 500
     totalrewards = np.empty(N)
+    costs = np.empty(N)
     for n in range(N):
         eps = 1.0 / np.sqrt(n + 1)
         totalreward = play_one_episode(model, eps, gamma)
         totalrewards[n] = totalreward
         if n % 100 == 0:
             print('episode:', n, 'total reward:', totalreward, 'eps:', eps)
+
     print('avg reward for last 100 episodes:', totalrewards[-100:].mean())
     print('total steps:', totalrewards.sum())
 
-    env_video = record_video(env)
     model.env = env_video
     play_one_episode(model, 0, gamma)
 
