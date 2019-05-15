@@ -1,9 +1,6 @@
 #! python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, nested_scopes, generators, division
-from builtins import range
-
 import os
 import sys
 from datetime import datetime
@@ -32,12 +29,12 @@ class SGDRegressor:
         self.w = None
         self.lr = 0.01
 
-    def partial_fit(self, x, y):
+    def partial_fit(self, X, Y):
         if self.w is None:
-            D = x.shape[1]
+            D = X.shape[1]
             self.w = np.random.randn(D) / np.sqrt(D)
 
-        self.w += self.lr*(y - x.dot(self.w)).dot(x)
+        self.w += self.lr*(Y - X.dot(self.w)).dot(X)
 
     def predict(self, x):
         return x.dot(self.w)
@@ -83,7 +80,7 @@ class FeatureTransformer:
         scaler.fit(observation_examples)
 
         # to converte a state to a featurizes represetation.
-        # RBF kernels with different variances to cover different parts 
+        # RBF kernels with different variances to cover different parts
         # of the space
         featurizer = FeatureUnion([('rbf1', RBFSampler(gamma=5.0, n_components=n_components)),
                                    ('rbf2', RBFSampler(gamma=2.0, n_components=n_components)),
@@ -123,9 +120,9 @@ class Model:
         self.models[a].partial_fit(x, [G])
 
     def sample_action(self, s, eps):
-        # for eps 0 
+        # for eps 0
         # don't need epsilon-greedy, because SGDRegressor predicts 0 for all states
-        # until they are updated. This works as the Optimistic Initial values method, 
+        # until they are updated. This works as the Optimistic Initial values method,
         # since all the rewards, for Mountain Car are -1.
         if np.random.random() < eps:
             return self.env.action_space.sample()
@@ -136,7 +133,7 @@ class Model:
 # R(t) + gamma*R(t+1) + .. + (gamma^(n-1))*R(t+n-1) + (gamma^n)*max[Q(s(t+n), a(t+n))]
 
 # returns a list of states_and_rewards, and the total reward
-def play_one(model, eps, gamma, n=5):
+def play_one(env, model, eps, gamma, n=5):
     observation = env.reset()
     done = False
     total_reward = 0
@@ -197,23 +194,24 @@ def play_one(model, eps, gamma, n=5):
             actions.pop(0)
     return total_reward
 
-if __name__ == '__main__':
+
+def main():
     env = gym.make('MountainCar-v0')
     ft = FeatureTransformer(env)
     model = Model(env, ft, 'constant')
     gamma = 0.99
 
-    if 'monitor' in sys.argv:
-        filename = os.path.basename(__file__).split('.')[0]
-        monitor_dir = './' + filename + '_' + str(datetime.now())
-        env = wrappers.Monitor(env, monitor_dir)
+    # if 'monitor' in sys.argv:
+    #     filename = os.path.basename(__file__).split('.')[0]
+    #     monitor_dir = './' + filename + '_' + str(datetime.now())
+    #     env = wrappers.Monitor(env, monitor_dir)
 
-    N = 5000
+    N = 500
     total_rewards = np.empty(N)
     costs = np.empty(N)
     for n in range(N):
-        eps = 0.05*(0.999**n)  # reduce epsilon greedy as system learn more
-        total_reward = play_one(model, eps, gamma)
+        eps = 0.1*(0.97**n)  # reduce epsilon greedy as system learn more
+        total_reward = play_one(env, model, eps, gamma)
         total_rewards[n] = total_reward
         print('episode:', n, 'total reward:', total_reward)
     print('avg reward for last 100 episode:', total_rewards[-100:].mean())
@@ -225,3 +223,14 @@ if __name__ == '__main__':
 
     plot_running_avg(total_rewards)
     plot_cost_to_go(env, model)
+
+    if 'monitor' in sys.argv:
+        filename = os.path.basename(__file__).split('.')[0]
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        monitor_dir = filedir + '/../../model/video/mountain_car/' + filename + '_' + str(datetime.now())
+        env = wrappers.Monitor(env, monitor_dir)
+        play_one(env, model, eps, gamma, True)
+
+
+if __name__ == '__main__':
+    main()

@@ -20,6 +20,7 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   Radial Basis Function, RBF activation neural network
   SGDRegressor, Stochastic Gradient Descent
   - q_learning.py - RBF network to solve mountain car
+  - n_step.py - n-step q learning method. q with n steps.
 
 # notes
 
