@@ -21,6 +21,7 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   SGDRegressor, Stochastic Gradient Descent
   - q_learning.py - RBF network to solve mountain car
   - n_step.py - n-step q learning method. q with n steps.
+  - td_lambda.py - td_lambda, with q-learning.
 
 # notes
 

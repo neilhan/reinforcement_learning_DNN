@@ -1,9 +1,6 @@
 #! python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, nested_scopes, generators, division
-from builtins import range
-
 import os
 import sys
 from datetime import datetime
@@ -46,6 +43,7 @@ def plot_cost_to_go(env, estimator, num_tiles=20):
     fig.colorbar(surf)
     plt.show()
 
+
 def plot_running_avg(total_rewards):
     N = len(total_rewards)
     running_avg = np.empty(N)
@@ -55,6 +53,7 @@ def plot_running_avg(total_rewards):
     plt.title('Running Avergae')
     plt.show()
 
+
 class FeatureTransformer:
     def __init__(self, env, n_components=500):
         observation_examples = np.array([env.observation_space.sample() for x in range(10000)])
@@ -62,7 +61,7 @@ class FeatureTransformer:
         scaler.fit(observation_examples)
 
         # to converte a state to a featurizes represetation.
-        # RBF kernels with different variances to cover different parts 
+        # RBF kernels with different variances to cover different parts
         # of the space
         featurizer = FeatureUnion([('rbf1', RBFSampler(gamma=5.0, n_components=n_components)),
                                    ('rbf2', RBFSampler(gamma=2.0, n_components=n_components)),
@@ -79,6 +78,7 @@ class FeatureTransformer:
         scaled = self.scaler.transform(observations)
         return self.featurizer.transform(scaled)
 
+
 # -----------------------------------------------------------------------------
 # SGDRegressor defaults:
 # loss='squared_loss', penalty='l2', alpha=0.0001,
@@ -86,7 +86,8 @@ class FeatureTransformer:
 # verbose=0, epsilon=0.1, random_state=None, learning_rate='invscaling',
 # eta0=0.01, power_t=0.25, warm_start=False, average=False
 
-class BaseModel:  # BaseModel, same as SGDRegressor
+# BaseModel, same purpose as SGDRegressor for other examples, the core learning model
+class BaseModel:
     '''BaseModel in the course video.'''
     def __init__(self, D):
         # D = x.shape[1]
@@ -99,6 +100,7 @@ class BaseModel:  # BaseModel, same as SGDRegressor
     def predict(self, x):
         x = np.array(x)
         return x.dot(self.w)
+
 
 # Holds one BaseModel for each action
 class Model:
@@ -132,6 +134,7 @@ class Model:
         else:
             return np.argmax(self.predict(s))
 
+
 # calculate everything up to max[Q(s, a)]
 # R(t) + gamma*R(t+1) + .. + (gamma^(n-1))*R(t+n-1) + (gamma^n)*max[Q(s(t+n), a(t+n))]
 
@@ -162,17 +165,17 @@ def play_one(model, env, eps, gamma, lambda_):  # since TD(lambda_)
     return total_reward
 
 
-if __name__ == '__main__':
+def main():
     env = gym.make('MountainCar-v0')
     ft = FeatureTransformer(env)
     model = Model(env, ft)
-    gamma = 0.9999
+    gamma = 0.99
     lambda_ = 0.7
 
-    if 'monitor' in sys.argv:
-        filename = os.path.basename(__file__).split('.')[0]
-        monitor_dir = './' + filename + '_' + str(datetime.now())
-        env = wrappers.Monitor(env, monitor_dir)
+    # if 'monitor' in sys.argv:
+    #     filename = os.path.basename(__file__).split('.')[0]
+    #     monitor_dir = './' + filename + '_' + str(datetime.now())
+    #     env = wrappers.Monitor(env, monitor_dir)
 
     N = 500
     total_rewards = np.empty(N)
@@ -192,3 +195,12 @@ if __name__ == '__main__':
     plot_running_avg(total_rewards)
     plot_cost_to_go(env, model)
 
+    if 'monitor' in sys.argv:
+        filename = os.path.basename(__file__).split('.')[0]
+        filedir = os.path.dirname(os.path.abspath(__file__))
+        monitor_dir = filedir + '/../../model/video/mountain_car/' + filename + '_' + str(datetime.now())
+        env = wrappers.Monitor(env, monitor_dir)
+        play_one(model, env, eps, gamma, True)
+
+if __name__ == '__main__':
+    main()
