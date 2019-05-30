@@ -156,7 +156,7 @@ def play_one(model, env, eps, gamma, lambda_):  # since TD(lambda_)
         # update model
         next = model.predict(observation)
         assert(next.shape == (1, env.action_space.n))
-        G = reward + gamma*np.max(next[0])
+        G = reward + gamma * np.max(next[0])
         model.update(prev_observation, action, G, gamma, lambda_)
 
         total_reward += reward
