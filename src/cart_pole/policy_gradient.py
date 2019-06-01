@@ -97,10 +97,14 @@ class PolicyModel:
 
         cost = -tf.reduce_sum(self.advantages * seleted_probs)
 
-        self.train_op = tf.train.AdagradOptimizer(10e-2).minimize(cost)
-        # self.train_op = tf.train.AdamOptimizer(1e-1).minimize(cost)
-        # self.train_op = tf.train.MomentumOptimizer(1e-4, momentum=0.9).minimize(cost)
-        # self.train_op = tf.train.GradientDescentOptimizer(1e-4).minimize(cost)
+        # self.train_op = tf.train.GradientDescentOptimizer(1e-2).minimize(cost)
+        # self.train_op = tf.train.AdamOptimizer(1e-2).minimize(cost)
+
+        # this works with the MD well
+        # self.train_op = tf.train.AdagradOptimizer(6e-2).minimize(cost)
+
+        # this works with the TD well
+        self.train_op = tf.train.MomentumOptimizer(5e-4, momentum=0.9).minimize(cost)
 
     def set_session(self, session):
         self.session = session
@@ -186,7 +190,7 @@ def play_one_td(env, pmodel: PolicyModel, vmodel: ValueModel, gamma):
         # update models
         V_next = vmodel.predict(observation)
         G = reward + gamma * np.max(V_next)
-        advantage = G - vmodel.predict(pre_observation)
+        advantage = G - vmodel.predict(prev_observation)
         pmodel.partial_fit(prev_observation, action, advantage)
         vmodel.partial_fit(prev_observation, G)
 
@@ -282,7 +286,8 @@ def main():
     total_rewards = np.empty(N)
     costs = np.empty(N)
     for n in range(N):
-        total_reward = play_one_mc(env, pmodel, vmodel, gamma)
+        # total_reward = play_one_mc(env, pmodel, vmodel, gamma)
+        total_reward = play_one_td(env, pmodel, vmodel, gamma)
         total_rewards[n] = total_reward
         if n % 100 == 0:
             print('episode:', n, 'total reward:', total_reward, 'avg reward (last 100):', total_rewards[max(0, n-10):(n-1)].mean())
@@ -295,6 +300,9 @@ def main():
     plot_total_rewards_n_running_avg(total_rewards)
 
     plot_running_avg(total_rewards)
+
+    # show one play
+    play_one_td(env_video, pmodel, vmodel, gamma)
 
 
 if __name__ == '__main__':
