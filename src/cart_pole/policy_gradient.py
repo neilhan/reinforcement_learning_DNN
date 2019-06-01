@@ -102,31 +102,32 @@ class PolicyModel:
         # self.train_op = tf.train.MomentumOptimizer(1e-4, momentum=0.9).minimize(cost)
         # self.train_op = tf.train.GradientDescentOptimizer(1e-4).minimize(cost)
 
-        def set_session(self, session):
-            self.session = session
+    def set_session(self, session):
+        self.session = session
 
-        def partial_fit(self, X, actions, advantages):
-            X = np.atleast_2d(X)
-            actions = np.atleast_1d(actions)
-            advantages = np.atleast_1d(advantages)
-            self.session.run(
-                self.train_op,
-                feed_dict={
-                    self.X: X,
-                    self.actions: actions,
-                    self.advantages: advantages,
-                }
-            )
+    def partial_fit(self, X, actions, advantages):
+        X = np.atleast_2d(X)
+        actions = np.atleast_1d(actions)
+        advantages = np.atleast_1d(advantages)
+        self.session.run(
+            self.train_op,
+            feed_dict={
+                self.X: X,
+                self.actions: actions,
+                self.advantages: advantages,
+            }
+        )
 
-        def predict(self, X):
-            X = np.atleast_2d(X)
-            return self.session.run(self.predict_op, feed_dict={self.X: X})
+    def predict(self, X):
+        X = np.atleast_2d(X)
+        return self.session.run(self.predict_op, feed_dict={self.X: X})
 
-        def sample_action(self, X):
-            p = self.predict(X)[0]
-            return np.random.choice(len(p), p=p)
+    def sample_action(self, X):
+        p = self.predict(X)[0]
+        return np.random.choice(len(p), p=p)
 
-class ValueModule:
+
+class ValueModel:
     def __init__(self, D, hidden_layer_sizes):
         '''
         D = input feature size
@@ -168,4 +169,133 @@ class ValueModule:
 
     def predict(self, X):
         X = np.atleast_2d(X)
-        return self.sesion.run(self.predict_op, feed_dict={self.X: X})
+        return self.session.run(self.predict_op, feed_dict={self.X: X})
+
+
+def play_one_td(env, pmodel: PolicyModel, vmodel: ValueModel, gamma):
+    observation = env.reset()
+    done = False
+    total_reward = 0
+    iters = 0
+
+    while not done and iters < 2000:
+        action = pmodel.sample_action(observation)
+        prev_observation = observation
+        observation, reward, done, info = env.step(action)
+
+        # update models
+        V_next = vmodel.predict(observation)
+        G = reward + gamma * np.max(V_next)
+        advantage = G - vmodel.predict(pre_observation)
+        pmodel.partial_fit(prev_observation, action, advantage)
+        vmodel.partial_fit(prev_observation, G)
+
+        if reward == 1:
+            total_reward += reward
+        iters += 1
+
+    return total_reward
+
+
+def play_one_mc(env, pmodel: PolicyModel, vmodel: ValueModel, gamma):
+    observation = env.reset()
+    done = False
+    total_reward = 0
+    iters = 0
+
+    # collecting the episode
+    states = []
+    actions = []
+    rewards = []
+
+    # play
+    reward = 0
+    while not done and iters < 2000:
+        action = pmodel.sample_action(observation)
+
+        states.append(observation)
+        actions.append(action)
+        rewards.append(reward)
+
+        prev_observation = observation
+        observation, reward, done, info = env.step(action)
+
+        if done:
+            reward = -200
+
+        if reward == 1:
+            total_reward += reward
+
+        iters += 1
+
+    # done while loop, save the last step
+    action = pmodel.sample_action(observation)
+    states.append(observation)
+    actions.append(action)
+    rewards.append(reward)
+
+    returns = []
+    advantages = []
+    G = 0
+    for s, r in zip(reversed(states), reversed(rewards)):
+        returns.append(G)
+        advantages.append(G - vmodel.predict(s)[0])
+        G = r + gamma * G
+    returns.reverse()
+    advantages.reverse()
+
+    # update the models
+    pmodel.partial_fit(states, actions, advantages)
+    vmodel.partial_fit(states, returns)
+
+    return total_reward
+
+
+def record_video(env):
+    filename = os.path.basename(__file__).split('.')[0]
+    monitor_dir = '../../model/video/cart_pole/' + filename + '_' + str(datetime.now())
+    env = wrappers.Monitor(env, monitor_dir)
+    return env
+
+
+def main():
+    gamma = 0.99
+
+    env = gym.make('CartPole-v0')
+    env_video = record_video(env)
+
+    D = env.observation_space.shape[0]
+    K = env.action_space.n
+    pmodel = PolicyModel(D, K, [])  # no hidden layers
+    vmodel = ValueModel(D, [10,])
+
+    if 'monitor' in sys.argv:
+        env = env_video
+
+    init = tf.global_variables_initializer()
+    session = tf.InteractiveSession()
+    session.run(init)
+    pmodel.set_session(session)
+    vmodel.set_session(session)
+
+    N = 1000
+    total_rewards = np.empty(N)
+    costs = np.empty(N)
+    for n in range(N):
+        total_reward = play_one_mc(env, pmodel, vmodel, gamma)
+        total_rewards[n] = total_reward
+        if n % 100 == 0:
+            print('episode:', n, 'total reward:', total_reward, 'avg reward (last 100):', total_rewards[max(0, n-10):(n-1)].mean())
+
+    # done loop, plot
+    print('avg reward for last 100 episodes:', total_rewards[-100:].mean())
+    print('tatal steps:', total_rewards.sum())
+
+    # plot
+    plot_total_rewards_n_running_avg(total_rewards)
+
+    plot_running_avg(total_rewards)
+
+
+if __name__ == '__main__':
+    main()

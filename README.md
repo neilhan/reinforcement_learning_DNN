@@ -35,4 +35,7 @@ pip freeze > requirements.txt
 
 # trouble with pyYAML, versions older than 4.x were not safe
 pip3 install --ignore-installed PyYAML
+
+# SPC m V a	activate a virtual environment in any directory
+# SPC m V d	deactivate active virtual environment
 ```

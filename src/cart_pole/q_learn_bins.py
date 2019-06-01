@@ -135,6 +135,8 @@ def record_video(env):
 
 def main():
     env = gym.make('CartPole-v0')
+    env_video = record_video(env)
+
     ft = FeatureTransformer()
     model = Model(env, ft)
     gamma = 0.9
@@ -153,7 +155,6 @@ def main():
     print('avg reward for last 100 episodes:', totalrewards[-100:].mean())
     print('total steps:', totalrewards.sum())
 
-    env_video = record_video(env)
     model.env = env_video
     play_one_episode(model, 0, gamma)
 
