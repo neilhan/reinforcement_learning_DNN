@@ -16,13 +16,14 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
     Continuous states to discrete state, boxes.
   - q_learning.py - RBF + Q-learning on cart pole problem.
   - q_learning_tf.py - using tensorflow to implement SGDRegressor
-  - policy_learning.py - Policy learning, and value function learning.
+  - policy_learning.py - Policy gradient, and value function learning.
 - mountain_car
   Radial Basis Function, RBF activation neural network
   SGDRegressor, Stochastic Gradient Descent
   - q_learning.py - RBF network to solve mountain car
   - n_step.py - n-step q learning method. q with n steps.
   - td_lambda.py - td_lambda, with q-learning.
+  - policy_gradient_hill_climb.py - continuous policy solution with policy gradient, learning is done with hill-climbing.
 
 # notes
 
