@@ -10,14 +10,14 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-def plot_total_rewards_n_running_avg(totalrewards):
-    plt.plot(totalrewards)
+def plot_total_rewards_n_running_avg(total_rewards):
+    plt.plot(total_rewards)
     plt.title('Rewards')
 
-    N = len(totalrewards)
+    N = len(total_rewards)
     running_avg = np.empty(N)
     for t in range(N):
-        running_avg[t] = totalrewards[max(0, t - 100):(t + 1)].mean()
+        running_avg[t] = total_rewards[max(0, t - 100):(t + 1)].mean()
     plt.plot(running_avg)
     plt.title('RunningAverage')
     plt.show()
@@ -88,6 +88,7 @@ class PolicyModel:
         p_a_given_s = Z
         self.predict_op = p_a_given_s
 
+        # selected probabilities
         seleted_probs = tf.log(
             tf.reduce_sum(
                 p_a_given_s * tf.one_hot(self.actions, K),
