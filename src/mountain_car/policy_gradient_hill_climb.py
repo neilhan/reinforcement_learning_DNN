@@ -15,6 +15,37 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.kernel_approximation import RBFSampler
 from sklearn.linear_model import SGDRegressor
 
+
+def plot_total_rewards_n_running_avg(total_rewards):
+    plt.plot(total_rewards)
+    plt.title('Rewards')
+
+    N = len(total_rewards)
+    running_avg = np.empty(N)
+    for t in range(N):
+        running_avg[t] = total_rewards[max(0, t - 100):(t + 1)].mean()
+    plt.plot(running_avg)
+    plt.title('RunningAverage')
+    plt.show()
+
+
+def plot_running_avg(total_rewards):
+    N = len(total_rewards)
+    running_avg = np.empty(N)
+    for t in range(N):
+        running_avg[t] = total_rewards[max(0, t-100):(t+1)].mean()
+    plt.plot(running_avg)
+    plt.title('Running Avergae')
+    plt.show()
+
+
+def get_record_env(env):
+    filename = os.path.basename(__file__).split('.')[0]
+    monitor_dir = '../../model/video/cart_pole/' + filename + '_' + str(datetime.now())
+    env = wrappers.Monitor(env, monitor_dir)
+    return env
+
+
 # FeatureTransformer
 class FeatureTransformer:
     def __init__(self, env):
@@ -184,6 +215,9 @@ class PolicyModel:
         self.session.run(ops)
 
     def perturb_params(self):
+        '''
+        help we do the hill climbing
+        '''
         ops = []
         for p in self.params:
             v = self.session.run(p)
@@ -195,3 +229,93 @@ class PolicyModel:
                 op = p.assign(v + noise)
             ops.append(op)
         self.session.run(ops)
+
+
+def play_one(env, pmodel, gamma):
+    observation = env.reset()
+    done = False
+    total_reward = 0
+    iters = 0
+
+    while not done and iters < 2000:
+        # 2000, all good, quit. 200 is too early
+        action = pmodel.sample_action(observation)
+        # mountain car requires object[0] as action
+        observation, reward, done, info = env.step([action])
+
+        total_reward += reward
+        iters += 1
+    return total_reward
+
+
+def play_multiple_episodes(env, num_episodes, pmodel, gamma, print_iters=False):
+    '''
+    num_episodes : number of episodes to play
+    '''
+    total_rewards = np.empty(num_episodes)
+
+    for i in range(num_episodes):
+        total_rewards[i] = play_one(env, pmodel, gamma)
+
+        if print_iters:
+            print(i, 'avg so far:', total_rewards[:(i+1)].mean())
+
+    avg_total_rewards = total_rewards.mean()
+    print('avg total rewards:', avg_total_rewards)
+    return avg_total_rewards
+
+
+def random_search(env, pmodel, gamma):
+    total_rewards = []
+    best_avg_total_reward = float('-inf')
+    best_pmodel = pmodel
+    num_episodes_per_param_test = 3
+    for t in range(100):
+        tmp_pmodel = best_pmodel.copy()
+
+        tmp_pmodel.perturb_params()
+
+        avg_total_rewards = \
+            play_multiple_episodes(env, num_episodes_per_parma_test,
+                tmp_pmodel, gamma)
+        total_rewards.append(avg_total_rewards)
+
+        if avg_total_rewards > best_avg_total_reward:
+            best_pmodel = tmp_pmodel
+            best_avg_total_reward = avg_total_rewards
+    # / for range 100
+
+    return totalrewards, best_pmodel
+
+
+def main():
+    gamma = 0.99
+
+    env = gym.make('MountainCarContainuous-v0')
+    env_video = get_record_env(env)
+
+    feature_transformer(env, n_components=100)
+    D = feature_transformer.dimentsions
+    pmodel = PolicyModel(feature_transformer, D, [], [])
+    session = tf.InteractiveSession()
+    pmodel.set_session(session)
+    pmodel.init_vars()
+
+    total_rewards, pmodel = random_search(env, pmodel, gamma)
+    print('max reward:', np.max(total_rewards))
+
+    # play 100 episodes and check average
+    avg_total_rewards = play_multiple_episodes(env, 100, pmodel, gamma, print_iters=True)
+    print('avg reward over 100 episodes with best models:', avg_total_rewards)
+
+    # plot
+    plot_total_rewards_n_running_avg(total_rewards)
+
+    plot_running_avg(total_rewards)
+
+    # show one play
+    play_one_td(env_video, pmodel, vmodel, gamma)
+
+
+if __name__ = '__main__':
+    main()

@@ -32,6 +32,13 @@ def plot_running_avg(total_rewards):
     plt.show()
 
 
+def get_record_env(env):
+    filename = os.path.basename(__file__).split('.')[0]
+    monitor_dir = '../../model/video/cart_pole/' + filename + '_' + str(datetime.now())
+    env = wrappers.Monitor(env, monitor_dir)
+    return env
+
+
 class HiddenLayer:
     '''
     This is one hidden layer.
@@ -256,18 +263,11 @@ def play_one_mc(env, pmodel: PolicyModel, vmodel: ValueModel, gamma):
     return total_reward
 
 
-def record_video(env):
-    filename = os.path.basename(__file__).split('.')[0]
-    monitor_dir = '../../model/video/cart_pole/' + filename + '_' + str(datetime.now())
-    env = wrappers.Monitor(env, monitor_dir)
-    return env
-
-
 def main():
     gamma = 0.99
 
     env = gym.make('CartPole-v0')
-    env_video = record_video(env)
+    env_video = get_record_env(env)
 
     D = env.observation_space.shape[0]
     K = env.action_space.n
