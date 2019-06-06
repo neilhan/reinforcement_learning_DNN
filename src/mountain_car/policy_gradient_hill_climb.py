@@ -48,20 +48,20 @@ def get_record_env(env):
 
 # FeatureTransformer
 class FeatureTransformer:
-    def __init__(self, env):
+    def __init__(self, env, n_components=500):
         # observation_examples = np.array([env.observation_space.sample() for x in range(10000)])
         # sampling state has issues, velocities --> infinity,
         # so we created random the space,
         #  [(-1, 1), (-1, 1),..]
-        observation_examples = np.random.random((20000, 4)) * 2 - 1
+        observation_examples = np.array([env.observation_space.sample() for x in range(10000)])
         scaler = StandardScaler()
         scaler.fit(observation_examples)
 
         featurizer = FeatureUnion([
-            ("rbf1", RBFSampler(gamma=0.05, n_components=1000)),
-            ("rbf2", RBFSampler(gamma=0.1, n_components=1000)),
-            ("rbf3", RBFSampler(gamma=0.5, n_components=1000)),
-            ("rbf4", RBFSampler(gamma=1.0, n_components=1000))
+            ("rbf1", RBFSampler(gamma=0.5, n_components=n_components)),
+            ("rbf2", RBFSampler(gamma=1.0, n_components=n_components)),
+            ("rbf3", RBFSampler(gamma=2.0, n_components=n_components)),
+            ("rbf4", RBFSampler(gamma=5.0, n_components=n_components))
         ])
         feature_examples = featurizer.fit_transform(scaler.transform(observation_examples))
 
@@ -170,8 +170,7 @@ class PolicyModel:
         # variance is standard deviation, std
         norm = tf.contrib.distributions.Normal(mean, std)
         self.predict_op = tf.clip_by_value(norm.sample(), -1, 1)
-
-        # todo What's train_op
+        # todo What's train_op. will implement in policy_gradient cost optimization
 
     def set_session(self, session):
         self.session = session
@@ -198,6 +197,10 @@ class PolicyModel:
         X = self.feature_transformer.transform(X)
         return self.session.run(self.predict_op, feed_dict={self.X: X})
 
+    def sample_action(self, X):
+        p = self.predict(X)[0]
+        return p
+
     def copy(self):
         clone = PolicyModel(self.feature_transformer, self.D, self.hidden_layer_sizes_mean, self.hidden_layer_sizes_var)
         clone.set_session(self.session)
@@ -208,7 +211,7 @@ class PolicyModel:
     def copy_from(self, other):
         ops = []
         my_params = other.params
-        for p, q in zip(mp_params, other_params):
+        for p, q in zip(my_params, other.params):
             actual = self.session.run(q)
             op = p.assign(actual)
             ops.append(op)
@@ -261,7 +264,7 @@ def play_multiple_episodes(env, num_episodes, pmodel, gamma, print_iters=False):
             print(i, 'avg so far:', total_rewards[:(i+1)].mean())
 
     avg_total_rewards = total_rewards.mean()
-    print('avg total rewards:', avg_total_rewards)
+    print('evaluate one pmodel, avg total rewards:', avg_total_rewards)
     return avg_total_rewards
 
 
@@ -269,14 +272,17 @@ def random_search(env, pmodel, gamma):
     total_rewards = []
     best_avg_total_reward = float('-inf')
     best_pmodel = pmodel
-    num_episodes_per_param_test = 3
-    for t in range(100):
+    num_episodes_per_param_test = 5
+
+    num_search = 500
+    for t in range(num_search):
         tmp_pmodel = best_pmodel.copy()
 
         tmp_pmodel.perturb_params()
 
+        print('random_search ', t, 'of', num_search)
         avg_total_rewards = \
-            play_multiple_episodes(env, num_episodes_per_parma_test,
+            play_multiple_episodes(env, num_episodes_per_param_test,
                 tmp_pmodel, gamma)
         total_rewards.append(avg_total_rewards)
 
@@ -285,17 +291,17 @@ def random_search(env, pmodel, gamma):
             best_avg_total_reward = avg_total_rewards
     # / for range 100
 
-    return totalrewards, best_pmodel
+    return total_rewards, best_pmodel
 
 
 def main():
     gamma = 0.99
 
-    env = gym.make('MountainCarContainuous-v0')
+    env = gym.make('MountainCarContinuous-v0')
     env_video = get_record_env(env)
 
-    feature_transformer(env, n_components=100)
-    D = feature_transformer.dimentsions
+    feature_transformer = FeatureTransformer(env, n_components=100)
+    D = feature_transformer.dimensions
     pmodel = PolicyModel(feature_transformer, D, [], [])
     session = tf.InteractiveSession()
     pmodel.set_session(session)
@@ -309,13 +315,13 @@ def main():
     print('avg reward over 100 episodes with best models:', avg_total_rewards)
 
     # plot
-    plot_total_rewards_n_running_avg(total_rewards)
-
-    plot_running_avg(total_rewards)
+    plt.plot(total_rewards)
+    plt.title("Rewards")
+    plt.show()
 
     # show one play
-    play_one_td(env_video, pmodel, vmodel, gamma)
+    play_one(env_video, pmodel, gamma)
 
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     main()
