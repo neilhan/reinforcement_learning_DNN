@@ -181,7 +181,7 @@ class PolicyModel:
 
     def partial_fit(self, X, actions, advantages):
         X = np.atleast_2d(X)
-        X = self.feature_transformer.transforn(X)
+        X = self.feature_transformer.transform(X)
         actions = np.atleast_1d(actions)
         self.session.run(
             self.train_op,

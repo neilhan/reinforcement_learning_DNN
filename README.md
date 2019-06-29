@@ -17,6 +17,8 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   - q_learning.py - RBF + Q-learning on cart pole problem.
   - q_learning_tf.py - using tensorflow to implement SGDRegressor
   - policy_learning.py - Policy gradient, and value function learning.
+  - deep_q_network.py - q-learning network,
+  -
 - mountain_car
   Radial Basis Function, RBF activation neural network
   SGDRegressor, Stochastic Gradient Descent
@@ -24,6 +26,7 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   - n_step.py - n-step q learning method. q with n steps.
   - td_lambda.py - td_lambda, with q-learning.
   - policy_gradient_hill_climb.py - continuous policy solution with policy gradient, learning is done with hill-climbing.
+  - policy_gradient.py - policy gradient. TD(0)
 
 # notes
 
