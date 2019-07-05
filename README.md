@@ -28,6 +28,9 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
   - policy_gradient_hill_climb.py - continuous policy solution with policy gradient, learning is done with hill-climbing.
   - policy_gradient.py - policy gradient. TD(0)
 
+- atari
+  - deep_q_network.py - q-learning on game Break. CNN
+
 # notes
 
 ```
