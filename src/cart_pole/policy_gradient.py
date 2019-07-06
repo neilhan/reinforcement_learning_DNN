@@ -96,12 +96,9 @@ class PolicyModel:
         self.predict_op = p_a_given_s
 
         # selected probabilities
-        seleted_probs = tf.log(
-            tf.reduce_sum(
-                p_a_given_s * tf.one_hot(self.actions, K),
-                reduction_indices=[1]
-            )
-        )
+        seleted_probs = \
+            tf.log(tf.reduce_sum(p_a_given_s * tf.one_hot(self.actions, K),
+                                 reduction_indices=[1]))
 
         cost = -tf.reduce_sum(self.advantages * seleted_probs)
 

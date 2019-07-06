@@ -23,7 +23,6 @@ MAX_EXPERIENCES = 500000
 MIN_EXPERIENCES = 50000
 TARGET_UPDATE_PERIOD = 10000
 IM_SIZE = 84
-K = 4
 
 def get_model_npz_file_name():
     file_name = os.path.basename(__file__).split('.')[0]
@@ -192,7 +191,7 @@ class DeepQNetwork:
             # self.train_op = tf.train.MomentumOptimizer(1e-3, momentum=0.9).minimize(cost)
             # self.train_op = tf.train.GradientDescentOptimizer(1e-4).minimize(cost)
             self.cost = cost
-        #/with
+        #/with variable_scope
     #/__init__
 
     def copy_from(self, other):
@@ -349,6 +348,7 @@ def main():
     epsilon_change = (epsilon - epsilon_min) / 500000
 
     env = gym.envs.make('Breakout-v0')
+    K = env.action_space.n
     record_env = get_record_video_env(env)
 
     image_transformer = ImageTransformer()
