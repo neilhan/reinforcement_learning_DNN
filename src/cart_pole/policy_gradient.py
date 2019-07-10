@@ -97,9 +97,11 @@ class PolicyModel:
 
         # selected probabilities
         seleted_probs = \
-            tf.log(tf.reduce_sum(p_a_given_s * tf.one_hot(self.actions, K),
-                                 reduction_indices=[1]))
+            tf.log(
+                tf.reduce_sum(p_a_given_s * tf.one_hot(self.actions, K),
+                              reduction_indices=[1]))
 
+        # instead of using G, using advantage here. advantage = G(t)-V_hat(t)
         cost = -tf.reduce_sum(self.advantages * seleted_probs)
 
         # self.train_op = tf.train.GradientDescentOptimizer(1e-2).minimize(cost)
