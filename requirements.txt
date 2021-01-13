@@ -57,7 +57,7 @@ packaging==19.0
 pandas==0.24.2
 paramiko==2.6.0
 pep517==0.5.0
-Pillow==6.2.0
+Pillow==7.1.0
 pip-review==1.0
 pipupgrade==1.5.1
 ply==3.11
