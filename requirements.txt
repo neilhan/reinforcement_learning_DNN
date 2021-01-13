@@ -97,7 +97,7 @@ smart-open==1.8.4
 soupsieve==1.9.2
 team==1.0
 tensorboard==1.14.0
-tensorflow==1.15.4
+tensorflow==2.4.0
 tensorflow-estimator==1.14.0
 termcolor==1.1.0
 texttable==1.6.1
