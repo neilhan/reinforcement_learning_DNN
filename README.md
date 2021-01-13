@@ -47,3 +47,6 @@ pip3 install --ignore-installed PyYAML
 # SPC m V a	activate a virtual environment in any directory
 # SPC m V d	deactivate active virtual environment
 ```
+
+# Reversi
+20210113
