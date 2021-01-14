@@ -35,17 +35,28 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
 # notes
 
 ```
+# install python, venv on Debian
+sudo apt install gcc libpq-dev -y
+sudo apt install python-dev  python-pip -y
+sudo apt install python3-dev python3-pip python3-venv python3-wheel -y
+pip3 install wheel
+python setup.py bdist_wheel
+
+# opengl
+sudo apt install python-opengl
+
+# venv
 python -m venv env
 source env/bin/activate
+pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
+pip install -r requirements.txt --upgrade
 
 pip freeze > requirements.txt
 
 # trouble with pyYAML, versions older than 4.x were not safe
 pip3 install --ignore-installed PyYAML
 
-# SPC m V a	activate a virtual environment in any directory
-# SPC m V d	deactivate active virtual environment
 ```
 
 # Reversi
