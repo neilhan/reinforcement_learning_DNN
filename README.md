@@ -57,6 +57,7 @@ pip freeze > requirements.txt
 # trouble with pyYAML, versions older than 4.x were not safe
 pip3 install --ignore-installed PyYAML
 
+python -m unittest discover -s project_directory -p "*_test.py"
 ```
 
 # Reversi
