@@ -3,3 +3,5 @@ model
 tags
 
 venv
+.vscode
+__pycache__
