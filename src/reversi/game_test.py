@@ -74,6 +74,13 @@ class TestGame(unittest.TestCase):
             GameBoard.PLAYER_2, GameBoard.Spot(0, 2), GameBoard.Spot.step_right)
         self.assertEqual(flipping_spots, [])
 
+        # opponent to the left edge, place (0, 2)
+        # board[0]: [0, 1,1,2,0,0,0,0]
+        the_game.board[0] = [0, 1, 1, 2, 0, 0, 0, 0]
+        flipping_spots = the_game._eval_step(
+            GameBoard.PLAYER_2, GameBoard.Spot(0, 0), GameBoard.Spot.step_right)
+        self.assertEqual(flipping_spots, [GameBoard.Spot(0,1), GameBoard.Spot(0,2)])
+
     def test_eval(self):
         the_game = GameBoard.GameBoard()
         # P1 place at (5, 3), going to flip (4, 3)
@@ -142,10 +149,9 @@ class TestGame(unittest.TestCase):
 
     def test_play_a_piece(self):
         the_game = GameBoard.GameBoard()
-        new_game_state = the_game.play_a_piece(GameBoard.PLAYER_1, 3, 5)
+        new_game_state = the_game.play_a_piece(GameBoard.PLAYER_1, GameBoard.Spot(3, 5))
         self.assertTrue(new_game_state['is_move_valid'])
         self.assertEqual(new_game_state['flipped'], [GameBoard.Spot(3, 4)])
-        print(new_game_state['game'])
 
     def test_get_valid_spots(self):
         the_game = GameBoard.GameBoard()
