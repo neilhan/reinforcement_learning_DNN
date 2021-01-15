@@ -1,7 +1,6 @@
 import random
 
-from .. import GameBoard
-
+import reversi.GameBoard as GameBoard
 
 class RandomPlayer:
 
