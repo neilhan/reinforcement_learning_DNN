@@ -10,7 +10,7 @@ class Game:
         self.game_ended = False
 
     def execute_move(self, spot):
-        new_game_state = self.game_board.play_a_piece(self.current_player, spot)
+        new_game_state = self.game_board.get_new_board_for_a_move(self.current_player, spot)
 
         if not new_game_state['is_move_valid']:
             raise ValueError('Invalid move.')

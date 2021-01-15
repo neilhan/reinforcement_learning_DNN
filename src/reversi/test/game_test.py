@@ -1,12 +1,6 @@
 import unittest
 
-if __package__ is None or __package__ == '':
-    # uses current directory visibility
-    import GameBoard
-else:
-    # uses current package visibility
-    from . import GameBoard
-
+from reversi import GameBoard
 
 
 class TestGame(unittest.TestCase):
@@ -79,7 +73,7 @@ class TestGame(unittest.TestCase):
         the_game.board[0] = [0, 1, 1, 2, 0, 0, 0, 0]
         flipping_spots = the_game._eval_step(
             GameBoard.PLAYER_2, GameBoard.Spot(0, 0), GameBoard.Spot.step_right)
-        self.assertEqual(flipping_spots, [GameBoard.Spot(0,1), GameBoard.Spot(0,2)])
+        self.assertEqual(flipping_spots, [GameBoard.Spot(0, 1), GameBoard.Spot(0, 2)])
 
     def test_eval(self):
         the_game = GameBoard.GameBoard()
@@ -149,7 +143,7 @@ class TestGame(unittest.TestCase):
 
     def test_play_a_piece(self):
         the_game = GameBoard.GameBoard()
-        new_game_state = the_game.play_a_piece(GameBoard.PLAYER_1, GameBoard.Spot(3, 5))
+        new_game_state = the_game.get_new_board_for_a_move(GameBoard.PLAYER_1, GameBoard.Spot(3, 5))
         self.assertTrue(new_game_state['is_move_valid'])
         self.assertEqual(new_game_state['flipped'], [GameBoard.Spot(3, 4)])
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 
 PLAYER_1 = 1
@@ -35,7 +37,7 @@ class Spot:
 
     # return Spot
     @staticmethod
-    def from_friendly_format(friendly_format: str):
+    def from_friendly_format(friendly_format: str) -> Spot:
         if len(friendly_format) < 2:
             raise ValueError('At lease 2 characters. 1a, 1b, or 7h')
         row = int(friendly_format[:1]) - 1
@@ -58,45 +60,45 @@ class Spot:
     def __str__(self):
         return "Spot(%i, %i)" % (self.row, self.col)
 
-    def step_left(self):
+    def step_left(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_right(self):
+    def step_right(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.col = new_spot.col + 1
         return new_spot
 
-    def step_up(self):
+    def step_up(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row - 1
         return new_spot
 
-    def step_down(self):
+    def step_down(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row + 1
         return new_spot
 
-    def step_up_left(self):
+    def step_up_left(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_up_right(self):
+    def step_up_right(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col + 1
         return new_spot
 
-    def step_down_left(self):
+    def step_down_left(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_down_right(self):
+    def step_down_right(self) -> Spot:
         new_spot = Spot(self.row, self.col)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col + 1
@@ -284,7 +286,7 @@ class GameBoard:
 
     # returns new game state, it's a new deepcopy GameBoard,
     # {game, flipped, valid_move: true/false}
-    def play_a_piece(self, player_id, spot):
+    def get_new_board_for_a_move(self, player_id: int, spot: Spot) -> GameBoard:
         if self.get_spot_state(spot) > 0:
             # invalid move
             return {
