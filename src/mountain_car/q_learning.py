@@ -120,6 +120,7 @@ class Model:
         self.models[a].partial_fit(x, [G])
 
     def sample_action(self, s, eps):
+        """Not greedy, will randomly pick off-policy action by eps epsilon"""
         # for eps 0
         # don't need epsilon-greedy, because SGDRegressor predicts 0 for all states
         # until they are updated. This works as the Optimistic Initial values method,
