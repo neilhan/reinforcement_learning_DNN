@@ -1,6 +1,6 @@
 import unittest
 
-from reversi import GameBoard
+from reversi.game import GameBoard
 
 
 class TestGame(unittest.TestCase):

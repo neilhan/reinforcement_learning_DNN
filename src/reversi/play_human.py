@@ -1,9 +1,9 @@
-from reversi import GameBoard
-from reversi.GameAdapter import Game 
+from reversi.game import GameBoard
+from reversi.GameWrapper import GameWrapper 
 
 
 def play_human():
-    the_game = Game()
+    the_game = GameWrapper()
     print('Input your move by using <row><collum>. for example: 1a. To quite: ctl-c, or enter q')
 
     while True:

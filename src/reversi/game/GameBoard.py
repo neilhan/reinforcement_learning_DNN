@@ -110,6 +110,15 @@ class Spot:
         return new_spot
 
 
+class ResultOfAMove:
+    def __init__(self,
+                 new_game_board: GameBoard,
+                 flipped_spots: list[Spot],
+                 is_move_valid: bool):
+        self.new_game_board = new_game_board
+        self.flipped_spots = flipped_spots
+        self.is_move_valid = is_move_valid
+
 class GameBoard:
     def __init__(self):
         self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
@@ -199,7 +208,7 @@ class GameBoard:
         if spot.is_outside():
             return 0
         else:
-            return self.board[spot.row][spot.col] 
+            return self.board[spot.row][spot.col]
 
     def count_player_pieces(self, player_id):
         all_spots = []
@@ -295,14 +304,10 @@ class GameBoard:
 
     # returns new game state, it's a new deepcopy GameBoard,
     # {game, flipped, valid_move: true/false}
-    def get_new_board_for_a_move(self, player_id: int, spot: Spot) -> GameBoard:
+    def get_new_board_for_a_move(self, player_id: int, spot: Spot) -> ResultOfAMove:
         if self.get_spot_state(spot) > 0:
             # invalid move
-            return {
-                'game_board': self,
-                'flipped': [],
-                'is_move_valid': False,
-            }
+            return ResultOfAMove(self, [], False)
 
         # is it going to cause at lease one piece to flip?
         flipping_spots = self.get_flipping_spots(player_id, spot)
@@ -314,14 +319,7 @@ class GameBoard:
             # update board status
             new_game.update_status()
 
-            return {
-                'game_board': new_game,
-                'flipped': flipping_spots,
-                'is_move_valid': True,
-            }
+            return ResultOfAMove(new_game, flipping_spots, True)
         else:
-            return {
-                'game_board': self,
-                'flipped': [],
-                'is_move_valid': False,
-            }
+            return ResultOfAMove(self, [], False)
+

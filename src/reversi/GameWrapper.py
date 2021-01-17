@@ -1,7 +1,7 @@
-from reversi import GameBoard
+from reversi.game import GameBoard
 
 
-class Game:
+class GameWrapper:
     # Game play related state
     def __init__(self):
         self.game_board = GameBoard.GameBoard()
@@ -9,12 +9,12 @@ class Game:
         self.game_ended = False
 
     def execute_move(self, spot):
-        new_game_state = self.game_board.get_new_board_for_a_move(self.current_player, spot)
+        move_result = self.game_board.get_new_board_for_a_move(self.current_player, spot)
 
-        if not new_game_state['is_move_valid']:
+        if not move_result.is_move_valid:
             raise ValueError('Invalid move.')
 
-        self.game_board = new_game_state['game_board']
+        self.game_board = move_result.new_game_board
         self.current_player = self.game_board.get_next_player(self.current_player)
         self.game_ended = self.game_board.game_ended
 

@@ -1,10 +1,10 @@
-from reversi import GameBoard
-from reversi.GameAdapter import Game 
+from reversi.game import GameBoard
+from reversi.GameWrapper import GameWrapper 
 from reversi.players import RandomPlayer
 
 
 def play_random():
-    the_game = Game()
+    the_game = GameWrapper()
 
     player_1 = RandomPlayer.RandomPlayer(GameBoard.PLAYER_1)
     player_2 = RandomPlayer.RandomPlayer(GameBoard.PLAYER_2)
