@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 
 PLAYER_1 = 1
-PLAYER_2 = 2
+PLAYER_2 = -PLAYER_1
 
 COL_MAP = {
     'a': 0,
@@ -25,6 +25,11 @@ COL_MAP = {
 }
 
 COL_MAP_TO_CHAR = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+
+# player_id: 1 or -1
+def get_opponent_player_id(player_id):
+    return -player_id
 
 
 class Spot:
@@ -110,8 +115,8 @@ class GameBoard:
         self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 1, 2, 0, 0, 0],
-                      [0, 0, 0, 2, 1, 0, 0, 0],
+                      [0, 0, 0, PLAYER_1, PLAYER_2, 0, 0, 0],
+                      [0, 0, 0, PLAYER_2, PLAYER_1, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0, 0, 0, 0]]
@@ -155,9 +160,9 @@ class GameBoard:
         def __to_view_string(cell):
             if cell == 0:
                 return '.'
-            elif cell == 1:
+            elif cell == PLAYER_1:
                 return 'O'
-            elif cell == 2:
+            elif cell == PLAYER_2:
                 return 'X'
 
         return ' '.join(map(__to_view_string, the_row))
@@ -194,7 +199,7 @@ class GameBoard:
         if spot.is_outside():
             return 0
         else:
-            return self.board[spot.row][spot.col]
+            return self.board[spot.row][spot.col] 
 
     def count_player_pieces(self, player_id):
         all_spots = []
@@ -203,22 +208,21 @@ class GameBoard:
 
         return len(list(filter(lambda s: s == player_id, all_spots)))
 
-    def get_next_player(self, current_player):
-        next_player = 1
-        if current_player == 1:
-            next_player = 2
+    def get_next_player(self, current_player_id):
+        next_player_id = -current_player_id
 
-        valid_moves = self.get_valid_spots(next_player)
+        valid_moves = self.get_valid_spots(next_player_id)
         if len(valid_moves) > 0:
-            return next_player
+            return next_player_id
         else:
-            return current_player  # opponent has no moves, so current_player continue
+            return current_player_id  # opponent has no moves, so current_player continue
 
     # return new Game.
-    def _flip(self, player_id, flipping_spots):
+    def _flip(self, flipping_spots):
         new_game = self.deepcopy()
         for spot in flipping_spots:
-            new_game.board[spot.row][spot.col] = player_id
+            new_game.board[spot.row][spot.col] = - \
+                new_game.board[spot.row][spot.col]
 
         return new_game
 
@@ -235,11 +239,13 @@ class GameBoard:
             check_spot = direction_fn(check_spot)
 
         # if stopped not at board edge, and a piece of my player, return all the spots in between
-        if (not check_spot.is_outside()) and self.get_spot_state(check_spot) == player_id:
-            steps = max(abs(spot.row - check_spot.row), abs(spot.col - check_spot.col))
+        if ((not check_spot.is_outside())
+                and self.get_spot_state(check_spot) == player_id):
+            steps = max(abs(spot.row - check_spot.row),
+                        abs(spot.col - check_spot.col))
             flips = []
             current_spot = spot
-            for i in range(0, steps - 1, 1):
+            for _ in range(0, steps - 1, 1):
                 current_spot = direction_fn(current_spot)
                 flips.append(current_spot)
             return flips
@@ -271,17 +277,20 @@ class GameBoard:
             for c in range(0, 8, 1):
                 current_spot = Spot(r, c)
                 # at least adjacent to another piece
-                if self.get_spot_state (current_spot) == 0 and (self.get_spot_state(current_spot.step_up()) > 0
-                        or self.get_spot_state(current_spot.step_down()) > 0
-                        or self.get_spot_state(current_spot.step_left()) > 0
-                        or self.get_spot_state(current_spot.step_right()) > 0
-                        or self.get_spot_state(current_spot.step_up_left()) > 0
-                        or self.get_spot_state(current_spot.step_up_right()) > 0
-                        or self.get_spot_state(current_spot.step_down_left()) > 0
-                        or self.get_spot_state(current_spot.step_down_right()) > 0
-                ):
+                if (self.get_spot_state(current_spot) == 0
+                    and (self.get_spot_state(current_spot.step_up()) != 0
+                         or self.get_spot_state(current_spot.step_down()) != 0
+                         or self.get_spot_state(current_spot.step_left()) != 0
+                         or self.get_spot_state(current_spot.step_right()) != 0
+                         or self.get_spot_state(current_spot.step_up_left()) != 0
+                         or self.get_spot_state(current_spot.step_up_right()) != 0
+                         or self.get_spot_state(current_spot.step_down_left()) != 0
+                         or self.get_spot_state(current_spot.step_down_right()) != 0
+                         )):
                     valid_spots.append(current_spot)
-        valid_spots = list(filter(lambda s: len(self.get_flipping_spots(player_id, s)) > 0, valid_spots))
+        valid_spots = \
+            list(filter(lambda s: len(self.get_flipping_spots(player_id, s)) > 0,
+                        valid_spots))
         return valid_spots
 
     # returns new game state, it's a new deepcopy GameBoard,
@@ -299,7 +308,9 @@ class GameBoard:
         flipping_spots = self.get_flipping_spots(player_id, spot)
         if len(flipping_spots) > 0:
             # valid move, excute
-            new_game = self._flip(player_id, flipping_spots + [spot, ])
+            new_game = self._flip(flipping_spots)
+            new_game.board[spot.row][spot.col] = player_id
+
             # update board status
             new_game.update_status()
 
@@ -314,11 +325,3 @@ class GameBoard:
                 'flipped': [],
                 'is_move_valid': False,
             }
-
-
-# player_id: 1 or 2
-def get_opponent_player_id(player_id):
-    if player_id == 1:
-        return 2
-    else:
-        return 1
