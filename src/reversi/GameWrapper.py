@@ -3,7 +3,8 @@ from reversi.game import GameBoard
 
 class GameWrapper:
     # Game play related state
-    def __init__(self):
+    def __init__(self, id: int):
+        self.id = id
         self.game_board = GameBoard.GameBoard()
         self.current_player = GameBoard.PLAYER_1
         self.game_ended = False

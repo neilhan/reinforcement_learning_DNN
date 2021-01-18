@@ -4,12 +4,16 @@ import numpy as np
 import multiprocessing
 import logging
 
+from reversi.GameWrapper import GameWrapper
+
+
 NUM_CPU = multiprocessing.cpu_count()
 MODEL_PATH = '__models__'
 
 def train(num_steps:int, num_works:int):
+    envs = [GameWrapper(i) for i in range(num_works)]
 
-    pass
+    # ???? train
 
 
 def get_args():
