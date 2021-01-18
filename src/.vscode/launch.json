@@ -11,7 +11,8 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "TF_XLA_FLAGS": "--tf_xla_enable_xla_devices"
             }
         }
     ]
