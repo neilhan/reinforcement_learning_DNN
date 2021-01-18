@@ -39,14 +39,12 @@ sample code: git@github.com:lazyprogrammer/machine_learning_examples.git rl2
 sudo apt install gcc libpq-dev -y
 sudo apt install python-dev  python-pip -y
 sudo apt install python3-dev python3-pip python3-venv python3-wheel -y
-pip3 install wheel
-python setup.py bdist_wheel
 
 # opengl
 sudo apt install python-opengl
 
-# venv
-python -m venv env
+# venv. For ubuntu, debian needs the without-pip
+python -m venv env --without-pip
 source env/bin/activate
 pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt

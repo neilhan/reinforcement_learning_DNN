@@ -4,6 +4,7 @@ import tensorflow as tf
 
 from reversi.players.a2c_player.A2CAgentCNN import VisionShape, A2CAgentCNN
 
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 class A2CAgent:
     # is the Agent.
