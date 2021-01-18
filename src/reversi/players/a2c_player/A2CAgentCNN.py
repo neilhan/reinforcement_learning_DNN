@@ -13,15 +13,17 @@ class A2CAgentCNN:
     def __init__(self,
                  batch_size: int,
                  vision_shape: VisionShape,
-                 action_shape: int, # we have just one dimension. 
+                 action_shape: int,  # we have just one dimension.
                  time_window_size: int = 1):
 
         features_shape = (vision_shape.height,
                           vision_shape.width,
                           vision_shape.depth * time_window_size)
-        X = tf.keras.Input(shape=features_shape, batch_size=batch_size)
+        X = tf.keras.Input(shape=features_shape,
+                           batch_size=batch_size,
+                           dtype=tf.dtypes.int8)
         # hardcode the normalization scale for now. 1/2, to 0.5 or -0.5
-        X_normal = tf.cast(X, tf.float32) / 2.0
+        X_normal = tf.cast(X, tf.dtypes.float32) / 2.0
 
         # create the network
         with tf.name_scope('model') as scope:
