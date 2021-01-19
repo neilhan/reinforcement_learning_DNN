@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 
@@ -9,7 +10,7 @@ class VisionShape:
         self.depth = depth  # number of coler layers
 
 
-class A2CAgentCNN:
+class AgentCNN:
     def __init__(self,
                  batch_size: int,
                  vision_shape: VisionShape,
@@ -39,6 +40,7 @@ class A2CAgentCNN:
         # only need the first input/output, so get v0, and a0
         self.v0 = value_fn[:, 0]
         self.a0 = self._sample(policy_fn)
+        self.policy_fn = policy_fn
 
         self._model = tf.keras.Model(inputs=X,
                                      outputs=[policy_fn, value_fn],
@@ -78,8 +80,18 @@ class A2CAgentCNN:
         noise = tf.random.uniform(tf.shape(logits))
         return tf.argmax(logits - tf.math.log(-tf.math.log(noise)), 1)
 
+    
+    def save_model(self, save_path):
+        self._model.save(save_path)
+
+    def load_model(self, load_path):
+        self._model=tf.keras.models.load_model(load_path)
+
 
 if __name__ == '__main__':
     # create new instance
-    agent_cnn = A2CAgentCNN(5, VisionShape(8, 8, 1), 8*8, time_window_size=1)
+    agent_cnn = AgentCNN(5, VisionShape(8, 8, 1), 8*8, time_window_size=1)
+
+    agent_cnn.save_model(os.path.join('__model__','a2c_agent'))
+    agent_cnn.load_model(os.path.join('__model__','a2c_agent'))
     agent_cnn._model.summary()
