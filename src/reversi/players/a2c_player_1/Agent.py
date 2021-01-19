@@ -49,7 +49,7 @@ class AgentModel:
         return tf.argmax(logits - tf.math.log(-tf.math.log(noise)), 1)
 
     @tf.function
-    def action_value(self, observation):
+    def get_action_value(self, observation):
         output_actions, output_values = self._model.call(observation)
         action = self._sample(output_actions)
         return (action, output_values[:, 0])
@@ -89,7 +89,7 @@ class A2CAgent:
             for i in range(batch_size):
                 observations[i] = env_observation.copy()
                 # find which action, estimate value
-                actions[i], values[i] = self.model.action_value(env_observation[None, :])
+                actions[i], values[i] = self.model.get_action_value(env_observation[None, :])
                 # play the action on the game
                 env_observation, rewards[i], dones[i], env = env.execute_move(actions[i])
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     tf.Tensor
     # create new instance
     agent_model = AgentModel()
-    actions, values = agent_model.action_value(np.zeros((5, 8*8), dtype=np.float32))
+    actions, values = agent_model.get_action_value(np.zeros((5, 8*8), dtype=np.float32))
 
     # tf.config.run_functions_eagerly(True)
     # print('run function eagerly:', tf.executing_eagerly())
