@@ -1,9 +1,12 @@
 import numpy as np
 import tensorflow as tf
 
+from reversi.players.a2c_player_1.GameWrapper import GameWrapper
+
 
 class AgentModel:
-    def __init__(self, input_size: int = 8*8, action_size: int = 8*8):
+    def __init__(self, input_size: int = 8*8, action_size: int = (8*8 + 1)):
+        # the action 0, to 63 are the moves to take. The action 64 is pass this turn.
 
         # create the network
         with tf.name_scope('model'):
@@ -46,7 +49,7 @@ class AgentModel:
         return tf.argmax(logits - tf.math.log(-tf.math.log(noise)), 1)
 
     @tf.function
-    def step(self, observation):
+    def action_value(self, observation):
         output_actions, output_values = self._model.call(observation)
         action = self._sample(output_actions)
         return (action, output_values[:, 0])
@@ -59,7 +62,7 @@ class AgentModel:
 
 
 class A2CAgent:
-    def __init__(self, model,
+    def __init__(self, model: AgentModel,
                  learn_rate=7e-3, ent_coef=0.01, value_coef=0.5, max_grad_norm=0.5,
                  alpha=0.99, epsilon=1e-5, total_timesteps=int(10e3)):
         self.value_coef = value_coef
@@ -69,14 +72,32 @@ class A2CAgent:
         self.model._model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=learn_rate),
                            loss=[self._logits_loss, self._value_loss])
 
-    def train(self, env, batch_size=10, updates=40):
+    def train(self, env: GameWrapper, batch_size=10, train_for_num_batches=40):
         # batch arrayes
         actions = np.empty((batch_size,), dtype=np.int32)
         rewards, dones, values = np.empty((3, batch_size))
         observations = np.empty((batch_size, 8*8))
 
-        # training loop
-        # ????
+        ep_rewards =[0.0]
+        env_observation = env.reset()
+        # training loop. sample, train
+        for b in range(train_for_num_batches):
+            # for each step in the batch:
+            # as a player, play a step, collecting reward, and observe. 
+            # Then switch to next player. 
+            # (the observe is alway return the board as mine vs opponent)
+            for i in range(batch_size):
+                observations[i] = env_observation.copy()
+                # find which action, estimate value
+                actions[i], values[i] = self.model.action_value(env_observation[None, :])
+                # play the action on the game
+                env_observation, rewards[i], dones[i], env = env.execute_move(actions[i])
+
+            # now we have the batch for training
+            losses = self.model._model.train_on_batch(x=, y=)
+
+
+
 
     def _value_loss(self, returns, value):
         # build the loss_fn
@@ -103,7 +124,7 @@ if __name__ == '__main__':
     tf.Tensor
     # create new instance
     agent_model = AgentModel()
-    actions, values = agent_model.step(np.zeros((5, 8*8), dtype=np.float32))
+    actions, values = agent_model.action_value(np.zeros((5, 8*8), dtype=np.float32))
 
     # tf.config.run_functions_eagerly(True)
     # print('run function eagerly:', tf.executing_eagerly())

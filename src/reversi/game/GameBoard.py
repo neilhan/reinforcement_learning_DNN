@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import itertools
 import copy
 
-PLAYER_1 = 1
+PLAYER_1 = 1.0
 PLAYER_2 = -PLAYER_1
 
 COL_MAP = {
@@ -40,9 +41,9 @@ class Spot:
         else:
             raise ValueError('row and col needs to be between [0, 8)')
 
-    # return Spot
     @staticmethod
     def from_friendly_format(friendly_format: str) -> Spot:
+        # returns Spot
         if len(friendly_format) < 2:
             raise ValueError('At lease 2 characters. 1a, 1b, or 7h')
         row = int(friendly_format[:1]) - 1
@@ -119,16 +120,17 @@ class ResultOfAMove:
         self.flipped_spots = flipped_spots
         self.is_move_valid = is_move_valid
 
+
 class GameBoard:
     def __init__(self):
-        self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, PLAYER_1, PLAYER_2, 0, 0, 0],
-                      [0, 0, 0, PLAYER_2, PLAYER_1, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0]]
+        self.board = [[.0, .0, .0, .0, .0, .0, .0, .0],
+                      [.0, .0, .0, .0, .0, .0, .0, .0],
+                      [.0, .0, .0, .0, .0, .0, .0, .0],
+                      [.0, .0, .0, PLAYER_1, PLAYER_2, .0, .0, .0],
+                      [.0, .0, .0, PLAYER_2, PLAYER_1, .0, .0, .0],
+                      [.0, .0, .0, .0, .0, .0, .0, .0],
+                      [.0, .0, .0, .0, .0, .0, .0, .0],
+                      [.0, .0, .0, .0, .0, .0, .0, .0]]
         self.game_ended = False
         self.winner = 0
         self.player_1_count = 2
@@ -203,6 +205,10 @@ class GameBoard:
 
     def __str__(self):
         return self._to_str()
+
+    def observe_board_1d(self):
+        flat = list(itertools.chain.from_iterable(self.board))
+        return flat
 
     def get_spot_state(self, spot):
         if spot.is_outside():
@@ -322,4 +328,3 @@ class GameBoard:
             return ResultOfAMove(new_game, flipping_spots, True)
         else:
             return ResultOfAMove(self, [], False)
-
