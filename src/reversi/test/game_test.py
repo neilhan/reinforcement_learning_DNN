@@ -104,6 +104,7 @@ class TestGame(unittest.TestCase):
 
     def test_eval(self):
         the_game = GameBoard.GameBoard()
+        print(the_game)
         # P1 place at (5, 3), going to flip (4, 3)
         flipping_spots = the_game._eval_step(
             GameBoard.PLAYER_1, GameBoard.Spot(5, 3), GameBoard.Spot.step_up)

@@ -10,9 +10,9 @@ from reversi.game import GameBoard
 
 class A2CAgent:
     def __init__(self, model: A2CAgentNN,
-                 learn_rate=5e-4,
-                 ent_coef=0.01,
-                 value_coef=0.05,
+                 learn_rate=5e-3,
+                 ent_coef=0.0001,
+                 value_coef=0.5,
                  gamma=0.99):
         self.value_coef = value_coef
         self.ent_coef = ent_coef
@@ -28,7 +28,7 @@ class A2CAgent:
         # prepare batch arrayes
         actions = np.empty((batch_size,), dtype=np.int32)
         rewards, dones, values = np.empty((3, batch_size))
-        observations = np.empty((batch_size, 8*8))
+        observations = np.empty((batch_size, game.get_observation_size()))
 
         game_done_rewards = []
         next_observation = game.reset()
@@ -41,6 +41,7 @@ class A2CAgent:
             if b >= (train_for_num_batches - 3):
                 game.set_log_play(True)
 
+            counter_invalid_moves = 0
             # for each step in the batch:
             # A. as a player, play a step, collecting reward, and observe.
             # B. Then switch to next player.
@@ -51,10 +52,14 @@ class A2CAgent:
                 actions[i], values[i] = self.model.get_action_value(next_observation[None, :],
                                                                     game.get_all_valid_moves(),
                                                                     force_valid=False)
+                if b % 10 == 0:
+                    logging.info(str(game.game_board)+ ' action:'+ str(actions[i]))
                 # 2. play the action on the game
                 next_observation, rewards[i], dones[i], game, is_move_valid = \
                     game.execute_move(actions[i])
 
+                if not is_move_valid:
+                    counter_invalid_moves = counter_invalid_moves + 1
                 # if the move is a valid, and game is not done, we let opponent play one piece
                 if is_move_valid and not dones[i]:
                     # We need to let the next player make one move.
@@ -81,16 +86,18 @@ class A2CAgent:
                     logging.debug(game.game_board)
                     next_observation = game.reset()
                     # randomly switch to player_2 for the new game
-                    if bool(random.getrandbits(1)):
-                        first_action, _ = self.model.get_action_value(next_observation[None, :],
-                                                                      game.get_all_valid_moves(),
-                                                                      force_valid=True)
+                    # TODO donot switch to player2
+                    if False and bool(random.getrandbits(1)):
+                        first_action, _ = \
+                            self.model.get_action_value(next_observation[None, :],
+                                                        game.get_all_valid_moves(),
+                                                        force_valid=True)
                         # move can be illegal move
-                        next_observation, _, _, game, is_move_valid = game.execute_move(
-                            first_action)
+                        next_observation, _, _, game, is_move_valid = \
+                            game.execute_move(first_action)
                     logging.info('Episode: %04d, End game Reward: %03d' %
                                  (len(game_done_rewards), rewards[i]))
-
+            # //// for loop of this batch
             # now we have the batch for training
             _, next_value = self.model.get_action_value(next_observation[None, :],
                                                         game.get_all_valid_moves(),
@@ -103,8 +110,8 @@ class A2CAgent:
             # Train
             losses = self.model._model.train_on_batch(x=observations,
                                                       y=[acts_and_advs, returns])
-            logging.info('[%d/%d] Losses: %s' %
-                         (b+1, train_for_num_batches, losses))
+            logging.info('[%d/%d] Losses: %s, %d' %
+                         (b+1, train_for_num_batches, losses, counter_invalid_moves))
 
     def _returns_advantages(self, rewards, dones, values, next_value):
         # convert done to int array
@@ -146,9 +153,14 @@ if __name__ == '__main__':
                         # level=logging.DEBUG)
                         level=logging.INFO)
 
-    agent_nn = A2CAgentNN()
+    # create the Game
+    board_size = 6
+    game = GameWrapper(1, board_size=board_size)
+
     # create the agent
+    agent_nn = A2CAgentNN(action_size=game.get_action_size(),
+                          input_size=game.get_observation_size())
     agent = A2CAgent(agent_nn)
 
-    game = GameWrapper(1)
+    # Train
     agent.train(game, 100, 1000)

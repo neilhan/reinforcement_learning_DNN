@@ -5,35 +5,69 @@ import numpy as np
 import tensorflow as tf
 import logging
 
-from reversi.players.a2c_player_1.GameWrapper import GameWrapper, PASS_TURN
+from reversi.players.a2c_player_1.GameWrapper import GameWrapper
 from reversi.game import GameBoard
+
+
+class ProbabilityDistribution(tf.keras.Model):
+    def call(self, logits, **kwargs):
+        # Sample a random categorical action from the given logits
+        return tf.squeeze(tf.random.categorical(logits, 1), axis=-1)
 
 
 class A2CAgentNN:
     def __init__(self, input_size: int = 8*8, action_size: int = (8*8 + 1)):
         # the action 0, to 63 are the moves to take. The action 64 is pass this turn.
+        self.PASS_TURN_ACTION = action_size  # the last one is pass to other player
 
         # create the network
         with tf.name_scope('model'):
             X = tf.keras.Input(shape=(input_size,), dtype=tf.dtypes.float32)
             # fork: to policy and value_fn
             policy_dense_1 = self._create_dense_layer(512)(X)
-            policy_dense_2 = self._create_dense_layer(512)(policy_dense_1)
-            policy_dense_3 = self._create_dense_layer(512)(policy_dense_2)
+            policy_dense_2 = self._create_dense_layer(256)(policy_dense_1)
+            policy_dense_3 = self._create_dense_layer(128)(policy_dense_2)
             policy_logits = self._create_dense_layer(action_size,
                                                      act_fn=None)(policy_dense_3)
             value_dense_1 = self._create_dense_layer(512)(X)
-            value_dense_2 = self._create_dense_layer(512)(value_dense_1)
-            value_dense_3 = self._create_dense_layer(512)(value_dense_2)
+            value_dense_2 = self._create_dense_layer(256)(value_dense_1)
+            value_dense_3 = self._create_dense_layer(128)(value_dense_2)
             value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_3)
 
         self.policy_logits = policy_logits
         self.value_fn = value_fn
+        self.dist = ProbabilityDistribution()
 
-        self._model = tf.keras.Model(inputs=X,
-                                     outputs=[self.policy_logits,
-                                              self.value_fn],
-                                     name='A2CAgent')
+        self._model = \
+            tf.keras.Model(inputs=X,
+                           outputs=[self.policy_logits,
+                                    self.value_fn],
+                           name='A2CAgentNN')
+
+    # logits is the network policy output
+    # sample the next action
+    # (logits - log(-log(noise)) to introduce random action
+    @tf.function
+    def _sample_model(self, obs):
+        output_action_logits, output_values = self._model.call(obs)
+        return output_action_logits, output_values
+
+    def get_action_value(self, observation, all_valid_moves, force_valid=False):
+        action_logits, output_values = self._sample_model(observation)
+        sampled_action = self.dist.predict(action_logits)
+        # # This following logic is when forcing the action to a valid move
+        if force_valid:
+            if len(all_valid_moves) > 0 and not sampled_action in all_valid_moves:
+                logging.debug(
+                    'A2CAgentNN.get_action_value() pick random action')
+                sampled_action = random.choice(all_valid_moves)
+            elif len(all_valid_moves) == 0 and sampled_action != self.PASS_TURN_ACTION:
+                logging.debug(
+                    'A2CAgentNN.get_action_value() forced correction pass')
+                sampled_action = self.PASS_TURN_ACTION
+
+        return (sampled_action, output_values[:, 0])
+        # return (actions, value) only one output
 
     @staticmethod
     def _create_conv2d_layer(num_filters, kernel_size, strides):
@@ -46,33 +80,6 @@ class A2CAgentNN:
     @staticmethod
     def _create_dense_layer(num_nodes, act_fn=tf.nn.relu):
         return tf.keras.layers.Dense(units=num_nodes, activation=act_fn)
-
-    # logits is the network policy output
-    # sample the next action
-    # (logits - log(-log(noise)) to introduce random action
-    @tf.function
-    def _sample_model(self, obs):
-        output_action_logits, output_values = self._model.call(obs)
-        noise = tf.random.uniform(tf.shape(output_action_logits))
-        sampled_action = tf.argmax(
-            output_action_logits - tf.math.log(-tf.math.log(noise)), 1)
-        return sampled_action, output_values
-
-    def get_action_value(self, observation, all_valid_moves, force_valid=False):
-        sampled_action, output_values = self._sample_model(observation)
-        # # This following logic is when forcing the action to a valid move
-        if force_valid:
-            if len(all_valid_moves) > 0 and not sampled_action in all_valid_moves:
-                logging.debug('A2CAgentNN.get_action_value() pick random action')
-                sampled_action = random.choice(all_valid_moves)
-            elif len(all_valid_moves) == 0 and sampled_action != PASS_TURN:
-                logging.debug(
-                    'A2CAgentNN.get_action_value() forced correction pass')
-                sampled_action = PASS_TURN
-
-        return (sampled_action, output_values[:, 0])
-        # return (actions, value) only one output
-
 
 
 if __name__ == '__main__':

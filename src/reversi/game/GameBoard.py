@@ -6,6 +6,8 @@ import copy
 PLAYER_1 = 1.0
 PLAYER_2 = -PLAYER_1
 
+# note, 6, 8 size board are supported. Not supporting > 8 board
+
 COL_MAP = {
     'a': 0,
     'b': 1,
@@ -34,28 +36,30 @@ def get_opponent_player_id(player_id):
 
 
 class Spot:
-    def __init__(self, row, col):
-        if row < 8 and row >= 0 and col < 8 and col >= 0:
+    # note, 6, 8 size board are supported. Not supporting > 8 board
+    def __init__(self, row, col, board_size=8):
+        if row < board_size and row >= 0 and col < board_size and col >= 0:
             self.row = row
             self.col = col
+            self.board_size = board_size
         else:
-            raise ValueError('row and col needs to be between [0, 8)')
+            raise ValueError('row and col needs to be between [0, board_size)')
 
-    @staticmethod
-    def from_friendly_format(friendly_format: str) -> Spot:
+    def from_friendly_format(self, friendly_format: str) -> Spot:
         # returns Spot
         if len(friendly_format) < 2:
             raise ValueError('At lease 2 characters. 1a, 1b, or 7h')
         row = int(friendly_format[:1]) - 1
         col = COL_MAP[friendly_format[1:2]]
-        return Spot(row, col)
+        return Spot(row, col, self.board_size)
 
     # return str, for example: 1A, 6B
     def to_friendly_format(self):
         return '{0}{1}'.format(self.row + 1, COL_MAP_TO_CHAR[self.col])
 
     def is_outside(self) -> bool:
-        return self.row < 0 or self.row >= 8 or self.col < 0 or self.col >= 8
+        return (self.row < 0 or self.row >= self.board_size
+                or self.col < 0 or self.col >= self.board_size)
 
     def __eq__(self, other):
         return self.row == other.row and self.col == other.col
@@ -67,45 +71,45 @@ class Spot:
         return "Spot(%i, %i)" % (self.row, self.col)
 
     def step_left(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.col = new_spot.col - 1
         return new_spot
 
     def step_right(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.col = new_spot.col + 1
         return new_spot
 
     def step_up(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         return new_spot
 
     def step_down(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         return new_spot
 
     def step_up_left(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
     def step_up_right(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col + 1
         return new_spot
 
     def step_down_left(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
     def step_down_right(self) -> Spot:
-        new_spot = Spot(self.row, self.col)
+        new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col + 1
         return new_spot
@@ -122,15 +126,17 @@ class ResultOfAMove:
 
 
 class GameBoard:
-    def __init__(self):
-        self.board = [[.0, .0, .0, .0, .0, .0, .0, .0],
-                      [.0, .0, .0, .0, .0, .0, .0, .0],
-                      [.0, .0, .0, .0, .0, .0, .0, .0],
-                      [.0, .0, .0, PLAYER_1, PLAYER_2, .0, .0, .0],
-                      [.0, .0, .0, PLAYER_2, PLAYER_1, .0, .0, .0],
-                      [.0, .0, .0, .0, .0, .0, .0, .0],
-                      [.0, .0, .0, .0, .0, .0, .0, .0],
-                      [.0, .0, .0, .0, .0, .0, .0, .0]]
+    # note, 6, 8 size board are supported. Not supporting > 8 board
+    def __init__(self, board_size=8):
+        if board_size % 2 > 0:
+            raise ValueError('board_size needs to be > 4, and even number.')
+        self.board = [[0.0]*board_size for _ in range(board_size)]
+        self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_1
+        self.board[int(board_size/2)][int(board_size/2)] = PLAYER_1
+        self.board[int(board_size/2-1)][int(board_size/2)] = PLAYER_2
+        self.board[int(board_size/2)][int(board_size/2-1)] = PLAYER_2
+
+        self.board_size = board_size
         self.game_ended = False
         self.winner = 0
         self.player_1_count = 2
@@ -153,7 +159,7 @@ class GameBoard:
             self.winner = 0
 
     def deepcopy(self):
-        new_game = GameBoard()
+        new_game = GameBoard(self.board_size)
         new_game.board = copy.deepcopy(self.board)
         new_game.game_ended = self.game_ended
         new_game.winner = self.winner
@@ -179,24 +185,20 @@ class GameBoard:
         return ' '.join(map(__to_view_string, the_row))
 
     def _to_str(self):
-        return_str = '''Game board:
-                 a b c d e f g h
-               1 {0} 1
-               2 {1} 2
-               3 {2} 3
-               4 {3} 4
-               5 {4} 5
-               6 {5} 6
-               7 {6} 7
-               8 {7} 8
-                 a b c d e f g h
-               '''.format(*([self._row_to_string(r) for r in self.board]))
+        header = '  ' + \
+            (' '.join(
+                map(lambda i: COL_MAP_TO_CHAR[i], range(self.board_size))))
+        return_str = 'Game board:\n' + header + '\n'\
+            + '\n'.join([(str(r+1) + ' ' + self._row_to_string(self.board[r]) + ' ' + str(r+1))
+                         for r in range(self.board_size)]) \
+            + '\n' + header
+
         return_str = return_str + '\nPlayer 1: {0}'.format(self.player_1_count)
         return_str = return_str + '\nPlayer 2: {0}'.format(self.player_2_count)
         return_str = return_str + '\nNext possible moves for Player 1: {0}'.format(
-            list(map(lambda m: Spot.to_friendly_format(m), self.possible_moves_player_1)))
+            list(map(lambda m: m.to_friendly_format(), self.possible_moves_player_1)))
         return_str = return_str + '\nNext possible moves for Player 2: {0}'.format(
-            list(map(lambda m: Spot.to_friendly_format(m), self.possible_moves_player_2)))
+            list(map(lambda m: m.to_friendly_format(), self.possible_moves_player_2)))
         return_str = return_str + '\nGame Ended: {0}'.format(self.game_ended)
         return return_str
 
@@ -288,9 +290,9 @@ class GameBoard:
     # returns array of Spot().
     def get_valid_spots(self, player_id):
         valid_spots = []
-        for r in range(0, 8, 1):
-            for c in range(0, 8, 1):
-                current_spot = Spot(r, c)
+        for r in range(self.board_size):
+            for c in range(self.board_size):
+                current_spot = Spot(r, c, self.board_size)
                 # at least adjacent to another piece
                 if (self.get_spot_state(current_spot) == 0
                     and (self.get_spot_state(current_spot.step_up()) != 0

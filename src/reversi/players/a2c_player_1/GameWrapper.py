@@ -7,22 +7,28 @@ import tensorflow as tf
 
 from reversi.game import GameBoard
 
-PASS_TURN: int = 64
-
 
 class GameWrapper:
     # Game play related state
-    def __init__(self, id: int):
+    def __init__(self, id: int, board_size=8):
         self.id = id
+        self.board_size = board_size
+        self.PASS_TURN_ACTION = self.board_size * self.board_size
         self.reset()
 
     def reset(self) -> np.ndarray:
         # returns the observation of the board in one-d array. shape: (8*8,) float32
-        self.game_board = GameBoard.GameBoard()
+        self.game_board = GameBoard.GameBoard(self.board_size)
         self.current_player = GameBoard.PLAYER_1
         self.game_ended = False
         self.is_log_play = False
         return self.observe(GameBoard.PLAYER_1)
+    
+    def get_action_size(self) -> int:
+        return self.board_size * self.board_size + 1
+
+    def get_observation_size(self) -> int:
+        return self.board_size * self.board_size
 
     def observe(self, as_player_id) -> np.ndarray:
         # return np.ndarray of (8*8,) 64 1d array.
@@ -50,7 +56,7 @@ class GameWrapper:
         #         5. is valid move? True/False
         # This method will flip pieces, then switch player, set current_player to next.
         # The returned observation is for the next player. For the convenience during training.
-        if action < PASS_TURN:
+        if action < self.PASS_TURN_ACTION:
             # execute a move, place a piece
             spot = self.convert_action_to_spot(action)
             move_result = self.game_board.get_new_board_for_a_move(
@@ -67,14 +73,14 @@ class GameWrapper:
                     reward_of_this_move = (self.game_board.player_2_count -
                                            self.game_board.player_1_count)
                 if reward_of_this_move > 0:
-                    reward_of_this_move = 10 * reward_of_this_move + 100
+                    reward_of_this_move = 10 * reward_of_this_move + 10
                 else:
-                    reward_of_this_move = 10 * reward_of_this_move - 100
+                    reward_of_this_move = 10 * reward_of_this_move - 10
             else:
                 if move_result.is_move_valid:
-                    reward_of_this_move = 0.1
+                    reward_of_this_move = 1.5
                 else:
-                    reward_of_this_move = -0.05  # invalid move
+                    reward_of_this_move = -0.1  # invalid move
 
             # update to new state. Switch player etc
             if move_result.is_move_valid:  # next player
@@ -121,16 +127,14 @@ class GameWrapper:
         choices = self.game_board.get_valid_spots(self.current_player)
         return self.convert_spot_to_action(random.choice(choices))
 
-    @staticmethod
-    def convert_action_to_spot(action: int):
-        if action < 0 or action >= 64:
+    def convert_action_to_spot(self, action: int):
+        if action < 0 or action >= self.get_action_size():
             raise ValueError('Action needs to be between [0, 64)')
 
-        row = int(action / 8)
-        col = int(action % 8)  # remainder
-        spot = GameBoard.Spot(row, col)
+        row = int(action / self.board_size)
+        col = int(action % self.board_size)  # remainder
+        spot = GameBoard.Spot(row, col, self.board_size)
         return spot
 
-    @staticmethod
-    def convert_spot_to_action(spot: GameBoard.Spot) -> int:
-        return spot.row * 8 + spot.col
+    def convert_spot_to_action(self, spot: GameBoard.Spot) -> int:
+        return spot.row * spot.board_size + spot.col

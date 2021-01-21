@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from reversi.game import GameBoard
-from reversi.players.a2c_player_1.GameWrapper import GameWrapper, PASS_TURN
+from reversi.players.a2c_player_1.GameWrapper import GameWrapper
 
 
 class TestGameWrapper(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestGameWrapper(unittest.TestCase):
         game = GameWrapper(1)
         old_observation = game.reset()
 
-        env_observation, reward, done, game, is_valid = game.execute_move(PASS_TURN)
+        env_observation, reward, done, game, is_valid = game.execute_move(game.PASS_TURN_ACTION)
         self.assertTrue(is_valid)
         np.testing.assert_array_equal(env_observation, old_observation*-1)
         self.assertEqual(reward, -0.01)
