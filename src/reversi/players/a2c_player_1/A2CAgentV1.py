@@ -8,7 +8,7 @@ from reversi.players.a2c_player_1.A2CAgentNN import A2CAgentNN
 from reversi.game import GameBoard
 
 
-class A2CAgent:
+class A2CAgentV1:
     def __init__(self, model: A2CAgentNN,
                  learn_rate=5e-3,
                  ent_coef=0.0001,
@@ -121,8 +121,8 @@ class A2CAgent:
         # calc returns: discounted sum of future rewards
         for t in reversed(range(rewards.shape[0])):
             # if game is done, done count in future rewards. *(1-dones[t])
-            returns[t] = rewards[t] + self.gamma * \
-                returns[t + 1] * (1 - dones[t])
+            returns[t] = \
+                rewards[t] + self.gamma * returns[t + 1] * (1 - dones[t])
         returns = returns[:-1]
         # advantages: returns - baseline (estimate)
         advantages = returns - values
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     # create the agent
     agent_nn = A2CAgentNN(action_size=game.get_action_size(),
                           input_size=game.get_observation_size())
-    agent = A2CAgent(agent_nn)
+    agent = A2CAgentV1(agent_nn)
 
     # Train
     agent.train(game, 100, 1000)

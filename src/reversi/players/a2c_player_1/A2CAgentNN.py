@@ -13,6 +13,7 @@ class ProbabilityDistribution(tf.keras.Model):
     def call(self, logits, **kwargs):
         # Sample a random categorical action from the given logits
         return tf.squeeze(tf.random.categorical(tf.math.log(logits), 1), axis=-1)
+        # return tf.squeeze(tf.random.categorical((logits), 1), axis=-1)
 
 
 class A2CAgentNN:

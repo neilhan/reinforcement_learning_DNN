@@ -5,7 +5,7 @@ import logging
 
 from reversi.players.a2c_player_1.GameWrapper_simple import GameWrapper
 from reversi.players.a2c_player_1.A2CAgentNN import A2CAgentNN
-from reversi.players.a2c_player_1.A2CAgent import A2CAgent
+from reversi.players.a2c_player_1.A2CAgentV1 import A2CAgentV1
 from reversi.game import GameBoard
 
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # create the agent
     agent_nn = A2CAgentNN(action_size=game.get_action_size(),
                           input_size=game.get_observation_size())
-    agent = A2CAgent(agent_nn)
+    agent = A2CAgentV1(agent_nn)
 
     # Train
     agent.train(game, 10, 600)

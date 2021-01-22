@@ -10,11 +10,11 @@ class VisionShape:
         self.depth = depth  # number of coler layers
 
 
-class AgentCNN:
+class A2CAgentCNN:
     def __init__(self,
-                 batch_size: int,
-                 vision_shape: VisionShape,
-                 action_shape: int,  # we have just one dimension.
+                 batch_size: int = 5,
+                 vision_shape: VisionShape = VisionShape(8, 8, 1),
+                 action_size: int = 8*8+1,  # we have just one dimension.
                  time_window_size: int = 1):
 
         features_shape = (vision_shape.height,
@@ -33,18 +33,19 @@ class AgentCNN:
             flat_layer_3 = tf.keras.layers.Flatten()(c2)
             dense_4 = self._create_dense_layer(512)(flat_layer_3)
             # fork: to policy and value_fn
-            policy_fn = self._create_dense_layer(
-                action_shape, act_fn=None)(dense_4)
+            policy_fn = self._create_dense_layer(action_size,
+                                                 act_fn=None)(dense_4)
             value_fn = self._create_dense_layer(1, act_fn=None)(dense_4)
 
         # only need the first input/output, so get v0, and a0
-        self.v0 = value_fn[:, 0]
+        self.value_fn = value_fn[:, 0]
         self.a0 = self._sample(policy_fn)
         self.policy_fn = policy_fn
 
         self._model = tf.keras.Model(inputs=X,
                                      outputs=[policy_fn, value_fn],
                                      name='A2CAgentCNN')
+        self._model.X = X
 
     @tf.function
     def step(self, observation):
@@ -80,18 +81,19 @@ class AgentCNN:
         noise = tf.random.uniform(tf.shape(logits))
         return tf.argmax(logits - tf.math.log(-tf.math.log(noise)), 1)
 
-    
     def save_model(self, save_path):
         self._model.save(save_path)
 
     def load_model(self, load_path):
-        self._model=tf.keras.models.load_model(load_path)
+        self._model = tf.keras.models.load_model(load_path)
 
 
 if __name__ == '__main__':
     # create new instance
-    agent_cnn = AgentCNN(5, VisionShape(8, 8, 1), 8*8, time_window_size=1)
+    agent_cnn = A2CAgentCNN(5, VisionShape(8, 8, 1), 8*8+1, time_window_size=1)
+    output = agent_cnn.step(np.zeros((1, 8, 8, 1)))
+    print('output:', output)
 
-    agent_cnn.save_model(os.path.join('__model__','a2c_agent'))
-    agent_cnn.load_model(os.path.join('__model__','a2c_agent'))
+    agent_cnn.save_model(os.path.join('__model__', 'a2c_agent'))
+    agent_cnn.load_model(os.path.join('__model__', 'a2c_agent'))
     agent_cnn._model.summary()
