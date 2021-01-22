@@ -12,7 +12,7 @@ from reversi.game import GameBoard
 class ProbabilityDistribution(tf.keras.Model):
     def call(self, logits, **kwargs):
         # Sample a random categorical action from the given logits
-        return tf.squeeze(tf.random.categorical(logits, 1), axis=-1)
+        return tf.squeeze(tf.random.categorical(tf.math.log(logits), 1), axis=-1)
 
 
 class A2CAgentNN:
@@ -24,14 +24,14 @@ class A2CAgentNN:
         with tf.name_scope('model'):
             X = tf.keras.Input(shape=(input_size,), dtype=tf.dtypes.float32)
             # fork: to policy and value_fn
-            policy_dense_1 = self._create_dense_layer(512)(X)
-            policy_dense_2 = self._create_dense_layer(256)(policy_dense_1)
-            policy_dense_3 = self._create_dense_layer(128)(policy_dense_2)
+            policy_dense_1 = self._create_dense_layer(128)(X)
+            policy_dense_2 = self._create_dense_layer(64)(policy_dense_1)
+            policy_dense_3 = self._create_dense_layer(32)(policy_dense_2)
             policy_logits = self._create_dense_layer(action_size,
                                                      act_fn=None)(policy_dense_3)
-            value_dense_1 = self._create_dense_layer(512)(X)
-            value_dense_2 = self._create_dense_layer(256)(value_dense_1)
-            value_dense_3 = self._create_dense_layer(128)(value_dense_2)
+            value_dense_1 = self._create_dense_layer(128)(X)
+            value_dense_2 = self._create_dense_layer(64)(value_dense_1)
+            value_dense_3 = self._create_dense_layer(32)(value_dense_2)
             value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_3)
 
         self.policy_logits = policy_logits

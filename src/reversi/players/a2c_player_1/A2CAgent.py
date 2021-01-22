@@ -53,7 +53,8 @@ class A2CAgent:
                                                                     game.get_all_valid_moves(),
                                                                     force_valid=False)
                 if b % 10 == 0:
-                    logging.info(str(game.game_board)+ ' action:'+ str(actions[i]))
+                    logging.info(str(game.game_board) +
+                                 ' action:' + str(actions[i]))
                 # 2. play the action on the game
                 next_observation, rewards[i], dones[i], game, is_move_valid = \
                     game.execute_move(actions[i])

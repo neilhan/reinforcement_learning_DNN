@@ -91,7 +91,7 @@ class GameWrapper:
             if game_ended:
                 reward_of_this_move = 10.0
             else:
-                reward_of_this_move = -1.0
+                reward_of_this_move = -0.1 * (8-action)
 
             # update to new state. Switch player etc
             self.current_player = -1 * self.current_player
