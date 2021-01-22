@@ -115,7 +115,7 @@ class A2CAgentV1:
                          (b+1, train_for_num_batches, losses, counter_invalid_moves))
 
     def _returns_advantages(self, rewards, dones, values, next_value):
-        # convert done to int array
+        # var dones is int array. 0-not done, 1 - game is done.
         # next_value is the estimate of the future state. critic
         returns = np.append(np.zeros_like(rewards), next_value, axis=-1)
         # calc returns: discounted sum of future rewards

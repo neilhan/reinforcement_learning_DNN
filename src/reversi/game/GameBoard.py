@@ -38,12 +38,15 @@ def get_opponent_player_id(player_id):
 class Spot:
     # note, 6, 8 size board are supported. Not supporting > 8 board
     def __init__(self, row, col, board_size=8):
-        if row < board_size and row >= 0 and col < board_size and col >= 0:
-            self.row = row
-            self.col = col
-            self.board_size = board_size
-        else:
-            raise ValueError('row and col needs to be between [0, board_size)')
+        self.row = row
+        self.col = col
+        self.board_size = board_size
+        # if row < board_size and row >= 0 and col < board_size and col >= 0:
+        #     self.row = row
+        #     self.col = col
+        #     self.board_size = board_size
+        # else:
+        #     raise ValueError('row and col needs to be between [0, board_size)')
 
     def from_friendly_format(self, friendly_format: str) -> Spot:
         # returns Spot
@@ -211,6 +214,10 @@ class GameBoard:
     def observe_board_1d(self):
         flat = list(itertools.chain.from_iterable(self.board))
         return flat
+    
+    def observe_board_2d(self):
+        # returns board as 2d array
+        return self.board
 
     def get_spot_state(self, spot):
         if spot.is_outside():

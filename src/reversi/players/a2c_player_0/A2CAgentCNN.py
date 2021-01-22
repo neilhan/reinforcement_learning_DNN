@@ -1,6 +1,8 @@
 import os
+import random
 import numpy as np
 import tensorflow as tf
+import logging
 
 
 class VisionShape:
@@ -8,6 +10,9 @@ class VisionShape:
         self.height = height
         self.width = width
         self.depth = depth  # number of coler layers
+    
+    def to_tuple(self):
+        return (self.height, self.width, self.depth)
 
 
 class A2CAgentCNN:
@@ -29,9 +34,9 @@ class A2CAgentCNN:
         # create the network
         with tf.name_scope('model') as scope:
             c1 = self._create_conv2d_layer(32, 4, 1)(X_normal)
-            c2 = self._create_conv2d_layer(64, 4, 1)(c1)
+            c2 = self._create_conv2d_layer(64, 3, 1)(c1)
             flat_layer_3 = tf.keras.layers.Flatten()(c2)
-            dense_4 = self._create_dense_layer(512)(flat_layer_3)
+            dense_4 = self._create_dense_layer(256)(flat_layer_3)
             # fork: to policy and value_fn
             policy_fn = self._create_dense_layer(action_size,
                                                  act_fn=None)(dense_4)
@@ -47,13 +52,38 @@ class A2CAgentCNN:
                                      name='A2CAgentCNN')
         self._model.X = X
 
+
+    # logits is the network policy output
+    # sample the next action
+    # (logits - log(-log(noise)) to introduce random action
     @tf.function
-    def step(self, observation):
-        # observation: in shape of: (width, height, depth * time_window_size)
+    def _sample_model(self, obs):
+        output_action_logits, output_values = self._model.call(obs)
+        return output_action_logits, output_values
+
+    def get_action_value(self, observation, all_valid_moves, force_valid=False):
+        action_logits, output_values = self._sample_model(observation)
+        sampled_action = self._sample(action_logits)
+        # # This following logic is when forcing the action to a valid move
+        if force_valid:
+            if len(all_valid_moves) > 0 and not sampled_action in all_valid_moves:
+                logging.debug(
+                    'A2CAgentNN.get_action_value() pick random action')
+                sampled_action = random.choice(all_valid_moves)
+            elif len(all_valid_moves) == 0 and sampled_action != self.PASS_TURN_ACTION:
+                logging.debug(
+                    'A2CAgentNN.get_action_value() forced correction pass')
+                sampled_action = self.PASS_TURN_ACTION
+
+        return (sampled_action, output_values[:, 0])
         # return (actions, value) only one output
-        # Should ???? observation should be padded to batch size, depth, time_window_size
-        output_actions, output_values = self._model.call(observation)
-        return (self._sample(output_actions), output_values[:, 0])
+    # @tf.function
+    # def step(self, observation):
+    #     # observation: in shape of: (width, height, depth * time_window_size)
+    #     # return (actions, value) only one output
+    #     # Should ???? observation should be padded to batch size, depth, time_window_size
+    #     output_actions, output_values = self._model.call(observation)
+    #     return (self._sample(output_actions), output_values[:, 0])
 
     @tf.function
     def value(self, observation):
