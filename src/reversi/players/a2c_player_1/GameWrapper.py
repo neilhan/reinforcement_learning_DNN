@@ -23,20 +23,23 @@ class GameWrapper:
         self.game_ended = False
         self.is_log_play = False
         return self.observe(GameBoard.PLAYER_1)
-    
+
     def get_action_size(self) -> int:
         return self.board_size * self.board_size + 1
 
-    def get_observation_size(self) -> int:
-        return self.board_size * self.board_size
+    def get_vision_shape(self):
+        # return tuple of the vision shape. default (8, 8, 1)
+        # 1 - color channel
+        return (self.board_size, self.board_size, 1)
 
     def observe(self, as_player_id) -> np.ndarray:
         # return np.ndarray of (8*8,) 64 1d array.
         # 0, is empty; 1 - is the player's piece; -1 - is opponent.
-        flat = self.game_board.observe_board_1d()
+        # flat = self.game_board.observe_board_1d()
+        obs = np.asarray(self.game_board.observe_board_2d())
         # if as player1, 1 x 1, no impact
         # if as player2, 1 x -1, flips all the pieces, so the 1 is my color
-        return np.asarray(flat) * as_player_id
+        return obs[:,:,None] * as_player_id
 
     def execute_move(self, action: int) -> Tuple[np.ndarray, float, int, GameWrapper, bool]:
         # action: 0 .. 64.
@@ -78,9 +81,9 @@ class GameWrapper:
                     reward_of_this_move = 10 * reward_of_this_move - 10
             else:
                 if move_result.is_move_valid:
-                    reward_of_this_move = 1.5
+                    reward_of_this_move = 1.0
                 else:
-                    reward_of_this_move = -0.1  # invalid move
+                    reward_of_this_move = -1.0  # invalid move
 
             # update to new state. Switch player etc
             if move_result.is_move_valid:  # next player
@@ -95,13 +98,18 @@ class GameWrapper:
             # the current_player, not next player, observation
             num_possible_moves = len(
                 self.game_board.get_valid_spots(self.current_player))
-            reward_of_this_move = -2 * num_possible_moves
+            if num_possible_moves > 0: 
+                reward_of_this_move = -2 * num_possible_moves
+                is_move_valid = False
+            else: # right move, needs to pass
+                self.current_player = self.game_board.get_next_player(
+                    self.current_player)
+                is_move_valid = True
+                reward_of_this_move = 0.0
+
             game_ended = self.game_board.game_ended
-            self.current_player = self.game_board.get_next_player(
-                self.current_player)
             observation = self.observe(self.current_player)
             spot = None
-            is_move_valid = True
 
         if self.is_log_play:
             self.log_move(spot, self)

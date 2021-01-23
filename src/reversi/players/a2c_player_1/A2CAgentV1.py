@@ -28,16 +28,23 @@ class A2CAgentV1:
         # prepare batch arrayes
         actions = np.empty((batch_size,), dtype=np.int32)
         rewards, dones, values = np.empty((3, batch_size))
-        observations = np.empty((batch_size, game.get_observation_size()))
+        observations = np.empty((batch_size,) + game.get_vision_shape())
 
         game_done_rewards = []
         next_observation = game.reset()
+        counter_to_reset_game = 10
         # training loop. sample, train
         for b in range(train_for_num_batches):
-            if b % 10 == 0:
+            if b % 50 == 0:
                 logging.info(game.game_board)
-            if b % 3:  # reset game, after 3 batchs.
+
+            # reset game, after 10 batchs. If game hasn't end
+            counter_to_reset_game = counter_to_reset_game - 1
+            if counter_to_reset_game == 0:
+                logging.info('Reset board after 10 * 5 steps')
                 next_observation = game.reset()
+                counter_to_reset_game = 10
+
             if b >= (train_for_num_batches - 3):
                 game.set_log_play(True)
 
@@ -47,14 +54,17 @@ class A2CAgentV1:
             # B. Then switch to next player.
             # (the observe is alway return the board as mine vs opponent)
             for i in range(batch_size):
-                # 1. find which should be the action, estimate value. by send the model current observation
+                # 1. find which should be the action, estimate value
+                #    by send the model current observation
                 observations[i] = next_observation.copy()
-                actions[i], values[i] = self.model.get_action_value(next_observation[None, :],
-                                                                    game.get_all_valid_moves(),
-                                                                    force_valid=False)
-                if b % 10 == 0:
+                actions[i], values[i] = \
+                    self.model.get_action_value(next_observation[None, :],
+                                                game.get_all_valid_moves(),
+                                                force_valid=False)
+                if b % 50 == 0:
                     logging.info(str(game.game_board) +
-                                 ' action:' + str(actions[i]))
+                                 '\nAgent will do action:' +
+                                 str(game.convert_action_to_spot(actions[i]).to_friendly_format()))
                 # 2. play the action on the game
                 next_observation, rewards[i], dones[i], game, is_move_valid = \
                     game.execute_move(actions[i])
@@ -96,8 +106,9 @@ class A2CAgentV1:
                         # move can be illegal move
                         next_observation, _, _, game, is_move_valid = \
                             game.execute_move(first_action)
-                    logging.info('Episode: %04d, End game Reward: %03d' %
+                    logging.info('Episode: %04d, End game Reward: %03d ******' %
                                  (len(game_done_rewards), rewards[i]))
+                    counter_to_reset_game = 10
             # //// for loop of this batch
             # now we have the batch for training
             _, next_value = self.model.get_action_value(next_observation[None, :],
@@ -111,12 +122,12 @@ class A2CAgentV1:
             # Train
             losses = self.model._model.train_on_batch(x=observations,
                                                       y=[acts_and_advs, returns])
-            logging.info('[%d/%d] Losses: %s, %d' %
-                         (b+1, train_for_num_batches, losses, counter_invalid_moves))
+            logging.info('[%d/%d] Invalide moves: %d, Losses: %s' %
+                         (b+1, train_for_num_batches, counter_invalid_moves, losses))
 
     def _returns_advantages(self, rewards, dones, values, next_value):
         # var dones is int array. 0-not done, 1 - game is done.
-        # next_value is the estimate of the future state. critic
+        # next_value is the estimation of the future state. so we can calc critic
         returns = np.append(np.zeros_like(rewards), next_value, axis=-1)
         # calc returns: discounted sum of future rewards
         for t in reversed(range(rewards.shape[0])):
@@ -160,8 +171,8 @@ if __name__ == '__main__':
 
     # create the agent
     agent_nn = A2CAgentNN(action_size=game.get_action_size(),
-                          input_size=game.get_observation_size())
+                          input_size=game.get_vision_shape())
     agent = A2CAgentV1(agent_nn)
 
     # Train
-    agent.train(game, 100, 1000)
+    agent.train(game, 5, 10000)
