@@ -24,4 +24,4 @@ if __name__ == '__main__':
     agent = A2CAgentV1(agent_nn)
 
     # Train
-    agent.train(game, 5, 10_000)
+    agent.train(game, 5, 100_000)

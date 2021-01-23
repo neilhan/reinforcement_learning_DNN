@@ -29,7 +29,7 @@ class A2CAgentCNN:
             cnn_1 = self._create_conv2d_layer(64, 4, 1)(X_normal)
             # cnn_2 = self._create_conv2d_layer(64, 3, 1)(cnn_1)
             flat_layer_3 = tf.keras.layers.Flatten()(cnn_1)
-            policy_dense_4 = self._create_dense_layer(256)(flat_layer_3)
+            policy_dense_4 = self._create_dense_layer(128)(flat_layer_3)
             policy_logits = self._create_dense_layer(action_size,
                                                      act_fn=None)(policy_dense_4)
             value_dense_4 = self._create_dense_layer(32)(flat_layer_3)

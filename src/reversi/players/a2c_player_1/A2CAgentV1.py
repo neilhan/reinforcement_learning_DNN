@@ -32,7 +32,7 @@ class A2CAgentV1:
 
         game_done_rewards = []
         next_observation = game.reset()
-        counter_to_reset_game = 10
+        counter_to_reset_game = 20
         # training loop. sample, train
         for b in range(train_for_num_batches):
             if b % 50 == 0:
@@ -40,8 +40,8 @@ class A2CAgentV1:
 
             # reset game, after 10 batchs. If game hasn't end
             counter_to_reset_game = counter_to_reset_game - 1
-            if counter_to_reset_game == 0:
-                logging.info('Reset board after 10 * 5 steps')
+            if counter_to_reset_game <= 0:
+                logging.info('Reset board after 20 invalid moves')
                 next_observation = game.reset()
                 counter_to_reset_game = 10
 
@@ -108,8 +108,9 @@ class A2CAgentV1:
                             game.execute_move(first_action)
                     logging.info('Episode: %04d, End game Reward: %03d ******' %
                                  (len(game_done_rewards), rewards[i]))
-                    counter_to_reset_game = 10
+                counter_to_reset_game = counter_to_reset_game - counter_invalid_moves
             # //// for loop of this batch
+
             # now we have the batch for training
             _, next_value = self.model.get_action_value(next_observation[None, :],
                                                         game.get_all_valid_moves(),
@@ -124,6 +125,7 @@ class A2CAgentV1:
                                                       y=[acts_and_advs, returns])
             logging.info('[%d/%d] Invalide moves: %d, Losses: %s' %
                          (b+1, train_for_num_batches, counter_invalid_moves, losses))
+        # ///// batch loop
 
     def _returns_advantages(self, rewards, dones, values, next_value):
         # var dones is int array. 0-not done, 1 - game is done.
