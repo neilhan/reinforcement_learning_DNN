@@ -8,3 +8,4 @@ __pycache__
 .idea
 **/__models__
 **/__model__
+**/*.pyc

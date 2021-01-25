@@ -3,15 +3,15 @@ import numpy as np
 import tensorflow as tf
 import logging
 
-from reversi.players.a2c_player_1.GameWrapper import GameWrapper
+from reversi.players.a2c_player_1.GameWrapper import GameWrapperInpatient as GameWrapper
 from reversi.players.a2c_player_1.A2CAgentNN import A2CAgentNN
 from reversi.game import GameBoard
 
 
 class A2CAgentV1:
     def __init__(self, model: A2CAgentNN,
-                 learn_rate=5e-3,
-                 ent_coef=0.0001,
+                 learn_rate=0.007,
+                 ent_coef=0.500,
                  value_coef=0.5,
                  gamma=0.99):
         self.value_coef = value_coef
@@ -19,8 +19,10 @@ class A2CAgentV1:
         self.gamma = gamma
 
         self.model = model
-        self.model._model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=learn_rate),
-                                  loss=[self._logits_loss, self._value_loss])
+        self.model._model.compile(
+            optimizer=tf.keras.optimizers.RMSprop(lr=learn_rate,
+                                                  momentum=0.01),
+            loss=[self._logits_loss, self._value_loss])
 
     def train(self, game: GameWrapper, batch_size=10, train_for_num_batches=40):
         logging.info('training starts: batch size: %04d for batchs: %05d' %
@@ -32,18 +34,10 @@ class A2CAgentV1:
 
         game_done_rewards = []
         next_observation = game.reset()
-        counter_to_reset_game = 20
         # training loop. sample, train
         for b in range(train_for_num_batches):
             if b % 50 == 0:
                 logging.info(game.game_board)
-
-            # reset game, after 10 batchs. If game hasn't end
-            counter_to_reset_game = counter_to_reset_game - 1
-            if counter_to_reset_game <= 0:
-                logging.info('Reset board after 20 invalid moves')
-                next_observation = game.reset()
-                counter_to_reset_game = 10
 
             if b >= (train_for_num_batches - 3):
                 game.set_log_play(True)
@@ -89,16 +83,17 @@ class A2CAgentV1:
                         opponent_action = game.pick_a_random_valid_move()
                         next_observation, opponent_reward, dones[i], game, is_move_valid = \
                             game.execute_move(opponent_action)
+                else:
+                    opponent_reward = 0
 
                 # if done, reset game
                 if dones[i]:
                     rewards[i] = rewards[i] - opponent_reward
                     game_done_rewards.append(rewards[i])
                     logging.debug(game.game_board)
-                    next_observation = game.reset()
+                    next_observation = game.reset()  # reset game <--------------
                     # randomly switch to player_2 for the new game
-                    # TODO donot switch to player2
-                    if False and bool(random.getrandbits(1)):
+                    if bool(random.getrandbits(1)):
                         first_action, _ = \
                             self.model.get_action_value(next_observation[None, :],
                                                         game.get_all_valid_moves(),
@@ -108,7 +103,7 @@ class A2CAgentV1:
                             game.execute_move(first_action)
                     logging.info('Episode: %04d, End game Reward: %03d ******' %
                                  (len(game_done_rewards), rewards[i]))
-                counter_to_reset_game = counter_to_reset_game - counter_invalid_moves
+                # reduce reset_game counter
             # //// for loop of this batch
 
             # now we have the batch for training

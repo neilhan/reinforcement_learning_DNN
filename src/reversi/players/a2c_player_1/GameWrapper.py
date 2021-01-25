@@ -39,7 +39,7 @@ class GameWrapper:
         obs = np.asarray(self.game_board.observe_board_2d())
         # if as player1, 1 x 1, no impact
         # if as player2, 1 x -1, flips all the pieces, so the 1 is my color
-        return obs[:,:,None] * as_player_id
+        return obs[:, :, None] * as_player_id
 
     def execute_move(self, action: int) -> Tuple[np.ndarray, float, int, GameWrapper, bool]:
         # action: 0 .. 64.
@@ -98,10 +98,10 @@ class GameWrapper:
             # the current_player, not next player, observation
             num_possible_moves = len(
                 self.game_board.get_valid_spots(self.current_player))
-            if num_possible_moves > 0: 
+            if num_possible_moves > 0:
                 reward_of_this_move = -2 * num_possible_moves
                 is_move_valid = False
-            else: # right move, needs to pass
+            else:  # right move, needs to pass
                 self.current_player = self.game_board.get_next_player(
                     self.current_player)
                 is_move_valid = True
@@ -117,7 +117,8 @@ class GameWrapper:
 
     def get_all_valid_moves(self):
         valid_moves = self.game_board.get_valid_spots(self.current_player)
-        return tf.convert_to_tensor(np.asarray(list(map(self.convert_spot_to_action, valid_moves))))
+        return tf.convert_to_tensor(
+            np.asarray(list(map(self.convert_spot_to_action, valid_moves))))
 
     def set_log_play(self, is_on):
         self.is_log_play = is_on
@@ -146,3 +147,27 @@ class GameWrapper:
 
     def convert_spot_to_action(self, spot: GameBoard.Spot) -> int:
         return spot.row * spot.board_size + spot.col
+
+
+class GameWrapperInpatient(GameWrapper):
+    def __init__(self, id: int, board_size=8, max_invalid_moves_before_reset=10):
+        super().__init__(id, board_size)
+
+        self.invalid_count = 0
+        self.max_invalid_moves_before_reset = max_invalid_moves_before_reset
+
+    def execute_move(self, action: int) -> Tuple[np.ndarray, float, int, GameWrapper, bool]:
+        observation, reward, done, game, is_move_valid = super().execute_move(
+            action)
+        if not is_move_valid:
+            self.invalid_count = self.invalid_count + 1
+        else: # reset counter
+            self.invalid_count = 0
+        if self.invalid_count > self.max_invalid_moves_before_reset:
+            logging.info('Reset board after {0} invalid moves'.format(
+                self.max_invalid_moves_before_reset))
+            super().reset()
+            self.invalid_count = 0
+            return observation, -1000.0, 1.0, self, is_move_valid
+        else:
+            return observation, reward, done, self, is_move_valid
