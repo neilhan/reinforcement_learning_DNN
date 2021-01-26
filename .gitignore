@@ -6,4 +6,6 @@ venv
 __pycache__
 .gradle
 .idea
-__models__
+**/__models__
+**/__model__
+**/*.pyc

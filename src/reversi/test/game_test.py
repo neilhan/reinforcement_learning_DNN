@@ -4,6 +4,29 @@ from reversi.game import GameBoard
 
 
 class TestGame(unittest.TestCase):
+    def test_observe_1d(self):
+        the_game = GameBoard.GameBoard()
+        flat_array = the_game.observe_board_1d()
+        self.assertEqual(flat_array, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        the_game.board[1][2]=1.0
+        flat_array = the_game.observe_board_1d()
+        self.assertEqual(flat_array, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+
     def test_deepcopy(self):
         the_game = GameBoard.GameBoard()
         new_game = the_game.deepcopy()
@@ -81,6 +104,7 @@ class TestGame(unittest.TestCase):
 
     def test_eval(self):
         the_game = GameBoard.GameBoard()
+        print(the_game)
         # P1 place at (5, 3), going to flip (4, 3)
         flipping_spots = the_game._eval_step(
             GameBoard.PLAYER_1, GameBoard.Spot(5, 3), GameBoard.Spot.step_up)
