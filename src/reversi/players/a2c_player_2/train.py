@@ -20,7 +20,7 @@ if __name__ == '__main__':
     board_size = 6
 
     # create the agent
-    agent_nn = A2CAgentCNN(action_size=board_size*board_size + 1,
+    agent_nn = A2CAgentCNN(num_actions=board_size*board_size + 1,
                            vision_shape=(board_size, board_size, 1))
     agent = A2CAgentV2(
         agent_nn,

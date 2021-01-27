@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     # create the agent
     agent_nn = A2CAgentCNN(vision_shape=(board_size, board_size, 1),
-                          action_size=game.get_action_size())
+                          num_actions=game.get_action_size())
     agent = A2CAgentV1(agent_nn)
 
     # Train

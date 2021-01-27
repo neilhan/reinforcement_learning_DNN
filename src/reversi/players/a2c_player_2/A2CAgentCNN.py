@@ -17,9 +17,9 @@ class ProbabilityDistribution(tf.keras.Model):
 
 
 class A2CAgentCNN:
-    def __init__(self, vision_shape=(8, 8, 1), action_size: int = (8*8 + 1)):
+    def __init__(self, vision_shape=(8, 8, 1), num_actions: int = (8*8 + 1)):
         # the action 0, to 63 are the moves to take. The action 64 is pass this turn.
-        self.PASS_TURN_ACTION = action_size  # the last one is pass to other player
+        self.PASS_TURN_ACTION = num_actions  # the last one is pass to other player
 
         # create the network
         with tf.name_scope('model'):
@@ -32,7 +32,7 @@ class A2CAgentCNN:
             flat_layer_3 = tf.keras.layers.Flatten()(cnn_2)
             concat_X_cnn = tf.keras.layers.concatenate([X_normal_flat, flat_layer_3])
             policy_dense_4 = self._create_dense_layer(128)(concat_X_cnn)
-            policy_logits = self._create_dense_layer(action_size,
+            policy_logits = self._create_dense_layer(num_actions,
                                                      act_fn=None)(policy_dense_4)
             value_dense_4 = self._create_dense_layer(32)(flat_layer_3)
             value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_4)
