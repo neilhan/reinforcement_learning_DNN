@@ -32,21 +32,13 @@ class A2CTrainer:
         self.model_save_path = model_save_path
 
         # self.optimizer = tf.keras.optimizers.RMSprop(lr=optimizer_learn_rate,
-        #                                              momentum=0.01)
+        #                                              momentum=0.05)
         self.optimizer = tf.keras.optimizers.Adam(
             learning_rate=optimizer_learn_rate)
         self.dist = lambda lgt: tf.squeeze(
             tf.random.categorical(tf.math.log(lgt), 1), axis=-1)
 
-        self.model = model
-
-        # self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path,
-        #                                                   histogram_freq=1,
-        #                                                   write_graph=True,
-        #                                                   write_images=True,
-        #                                                   update_freq='epoch',
-        #                                                   profile_batch=2,
-        #                                                   embeddings_freq=1)
+        self.model = model 
 
     def get_action_value(self, observation, all_valid_moves, force_valid=False):
         action_logits, output_values = self.model.call(observation)
@@ -204,9 +196,9 @@ class A2CTrainer:
         # consecutive trials
         reward_threshold = 195
         running_reward = 0
-        log_reward_interval = 100
-        log_game_interval = 500
-        save_model_interval = 1000
+        log_reward_interval = 500
+        log_game_interval = 1000
+        save_model_interval = 5000
 
         # with tqdm.trange(max_episodes) as t:
         #   for i in t:

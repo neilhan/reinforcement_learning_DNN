@@ -12,14 +12,16 @@ from reversi.players.a2c_player_4.GameWrapper import GameWrapperInpatient
 
 
 def do_training(board_size=8,
-                max_episodes=10_000, optimizer_learn_rate=0.001,
+                max_episodes=10_000,
+                optimizer_learn_rate=0.001,
                 model_save_path='./__models__/a2c_player_4/',
                 tensorboard_path='./__models__/a2c_player_4_tensorboard/',
                 load_saved_model=False):
     set_global_seeds(0)
 
     model = A2CModel(vision_shape=(board_size, board_size, 1),
-                     num_actions=board_size * board_size + 1)
+                     num_actions=board_size * board_size + 1,
+                     tensorboard_path=tensorboard_path)
     if load_saved_model:
         logging.info('Loading model...')
         model.load_model(model_save_path)
@@ -43,14 +45,12 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
                         level=logging.INFO)
-    tensorboard_path = './__models__/a2c_player_4_tensorboard/'
 
     # OPTIONAL: ADD A TIMESTAMP FOR UNIQUE FOLDER
     timestamp = datetime.now().strftime("%Y-%m-%d--%H%M")
-    tensorboard_path = tensorboard_path + '-' + timestamp
 
     model = do_training(max_episodes=1_000_000, board_size=6,
-                        optimizer_learn_rate=0.0010,
+                        optimizer_learn_rate=0.0020,
                         model_save_path='./__models__/a2c_player_4/',
-                        tensorboard_path=tensorboard_path,
-                        load_saved_model=True)
+                        tensorboard_path='./__models__/a2c_player_4_tensorboard/' + '-' + timestamp,
+                        load_saved_model=False)

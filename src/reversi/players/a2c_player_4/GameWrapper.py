@@ -131,7 +131,7 @@ class GameWrapper:
             move_str = 'PASS'
         else:
             move_str = spot.to_friendly_format()
-        logging.info('Current player: %1d Mading a move: %s' % (game.current_player, move_str))
+        logging.info('Current player: %1d Placing: %s' % (game.current_player, move_str))
     def log_move_result(self, game: GameWrapper):
         logging.info('Game ended?', game.game_ended)
         logging.info('^^^^^^^^^^^^^^^^^^^^^^^^')
