@@ -56,6 +56,16 @@ class A2CTrainer:
 
         return (sampled_action, output_values[:, 0])
 
+    def _opponent_step(self, state):
+        # let opponent's move ------
+        valid_moves = self.env.get_all_valid_moves()
+        # op_action, op_action_probs_t, op_value = self.model A2CTrainer._sample_action_n_value(state)
+        opponent_action, opponent_value = self.get_action_value(state[None, :], valid_moves,
+                                                                force_valid=True)
+        opponent_observation, opponent_reward, done, _env, is_move_valid = \
+            self.env.execute_move(opponent_action)
+        return opponent_observation, opponent_reward, done
+
     def tf_env_step(self, action: tf.Tensor) -> List[tf.Tensor]:
         """
         execute the move, and let component do their move
@@ -72,13 +82,7 @@ class A2CTrainer:
                 self.env.execute_move(action)
 
             if not done:
-                # # opponent's move ------
-                valid_moves = self.env.get_all_valid_moves()
-                # op_action, op_action_probs_t, op_value = self.model A2CTrainer._sample_action_n_value(state)
-                opponent_action, opponent_value = self.get_action_value(state[None, :], valid_moves,
-                                                                        force_valid=True)
-                opponent_observation, opponent_reward, done, _env, is_move_valid = \
-                    self.env.execute_move(opponent_action)
+                opponent_observation, opponent_reward, done = self._opponent_step(state)
                 # update state
                 state = opponent_observation
                 if done:
@@ -198,8 +202,8 @@ class A2CTrainer:
         reward_threshold = 195
         running_reward = 0
         log_reward_interval = 500
-        log_game_interval = 1000
-        save_model_interval = 5000
+        log_game_interval = 1_000
+        save_model_interval = 15_000
         best_reward = -99999999
         best_reward_batch = -99999999
 
@@ -207,6 +211,10 @@ class A2CTrainer:
         #   for i in t:
         for i in range(max_episodes):
             initial_state_np = self.env.reset()
+            # random switch to player 2
+            if bool(random.getrandbits(1)):
+                initial_state_np, _, _ = self._opponent_step(initial_state_np)
+
             if i % log_game_interval == 0:
                 self.is_log_env = True
                 self.env.set_log_play(True)
