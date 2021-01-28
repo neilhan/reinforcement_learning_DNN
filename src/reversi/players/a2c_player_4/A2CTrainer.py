@@ -22,9 +22,7 @@ class A2CTrainer:
                  env: GameWrapperInpatient,
                  model: A2CModel,
                  model_save_path='./__models__/a2c_player_4/',
-                 tensorboard_path='./__models__/a2c_player_4_tensorboard/',
-                 optimizer_learn_rate=0.001,
-                 load_saved_model=False):
+                 optimizer_learn_rate=0.001):
         # the action 0, to 63 are the moves to take. The action 64 is pass this turn.
         # the last one is pass to other player
         self.PASS_TURN_ACTION = model.num_actions
@@ -32,7 +30,6 @@ class A2CTrainer:
         self.env = env  # gym.make("CartPole-v0")
         self.is_log_env = False
         self.model_save_path = model_save_path
-        self.load_saved_model = load_saved_model
 
         # self.optimizer = tf.keras.optimizers.RMSprop(lr=optimizer_learn_rate,
         #                                              momentum=0.01)
@@ -42,7 +39,6 @@ class A2CTrainer:
             tf.random.categorical(tf.math.log(lgt), 1), axis=-1)
 
         self.model = model
-        self.model.compile(self.optimizer)
 
         # self.tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path,
         #                                                   histogram_freq=1,
@@ -53,7 +49,7 @@ class A2CTrainer:
         #                                                   embeddings_freq=1)
 
     def get_action_value(self, observation, all_valid_moves, force_valid=False):
-        action_logits, output_values = self.model(observation)
+        action_logits, output_values = self.model.call(observation)
         sampled_action = self.dist(action_logits)
         # # This following logic is when forcing the action to a valid move
         if force_valid:
@@ -115,7 +111,7 @@ class A2CTrainer:
 
         # Model pick an action ---------------------------
         # Run the model and to get action probabilities and critic value
-        action_logits_t, value = model(state)
+        action_logits_t, value = model.call(state)
 
         # Sample next action from the action probability distribution
         action = tf.random.categorical(action_logits_t, 1)[0, 0]
@@ -187,10 +183,10 @@ class A2CTrainer:
             loss = A2CTrainer.compute_loss(action_probs, values, returns)
 
         # Compute the gradients from the loss
-        grads = tape.gradient(loss, self.model.trainable_variables)
+        grads = tape.gradient(loss, self.model._model.trainable_variables)
 
         # Apply the gradients to the model's parameters
-        optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        optimizer.apply_gradients(zip(grads, self.model._model.trainable_variables))
 
         episode_reward = tf.math.reduce_sum(rewards)
 
@@ -211,7 +207,6 @@ class A2CTrainer:
         log_reward_interval = 100
         log_game_interval = 500
         save_model_interval = 1000
-        model_loaded = not self.load_saved_model
 
         # with tqdm.trange(max_episodes) as t:
         #   for i in t:
@@ -225,11 +220,6 @@ class A2CTrainer:
             episode_reward = int(self.train_step(initial_state,  # model,
                                                  self.optimizer, gamma,
                                                  max_steps_per_episode))
-            if (not model_loaded) and self.load_saved_model:
-                logging.info('Loading model...')
-                self.model = tf.keras.models.load_model(self.model_save_path)
-                model_loaded = True
-                logging.info('Model loaded from: ' + self.model_save_path)
 
             running_reward = episode_reward * 0.01 + running_reward * 0.99
 
@@ -242,7 +232,7 @@ class A2CTrainer:
                 self.env.set_log_play(False)
 
             if i % save_model_interval == 0:
-                self.model.save(self.model_save_path)
+                self.model._model.save(self.model_save_path)
             if running_reward > reward_threshold:
                 break
 

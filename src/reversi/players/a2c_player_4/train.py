@@ -18,16 +18,19 @@ def do_training(board_size=8,
                 load_saved_model=False):
     set_global_seeds(0)
 
-    model = A2CModel(num_actions=board_size * board_size + 1)
+    model = A2CModel(vision_shape=(board_size, board_size, 1),
+                     num_actions=board_size * board_size + 1)
+    if load_saved_model:
+        logging.info('Loading model...')
+        model.load_model(model_save_path)
+        logging.info('Model loaded from: ' + model_save_path)
 
     # Create the environment
     env = GameWrapperInpatient(board_size=board_size)
 
     trainer = A2CTrainer(env, model,
                          optimizer_learn_rate=optimizer_learn_rate,
-                         model_save_path=model_save_path,
-                         tensorboard_path=tensorboard_path,
-                         load_saved_model=load_saved_model)
+                         model_save_path=model_save_path)
 
     trainer.train(max_episodes)
 

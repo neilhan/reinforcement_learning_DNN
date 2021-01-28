@@ -6,44 +6,52 @@ from tensorflow.keras import layers
 from typing import Any, List, Sequence, Tuple
 
 
-class A2CModel(tf.keras.Model):
+class A2CModel:
     """Combined actor-critic network."""
 
     def __init__(self,
+                 vision_shape=(8, 8, 1),
                  num_actions: int = 8*8+1):
         """Initialize."""
         super().__init__()
 
         self.num_actions = num_actions
+        self.vision_shape = vision_shape
 
-        self.X_normal_flat = tf.keras.layers.Flatten()
-        # fork: to policy and value_fn
-        self.cnn_1 = self._create_conv2d_layer(30, 2, 2)
-        self.cnn_2 = self._create_conv2d_layer(30, 2, 1)
-        self.flat_layer_3 = tf.keras.layers.Flatten()
-        self.concat_X_cnn = tf.keras.layers.Concatenate()
-        # fork happens from here. After concat, -> policy, or -> value
-        self.policy_dense_4 = self._create_dense_layer(64)
-        self.policy_logits = self._create_dense_layer(num_actions, act_fn=None)
+        with tf.name_scope('model'):
+            X = tf.keras.Input(shape=vision_shape, dtype=tf.dtypes.float32)
+            X_normal = X / 4.0 + 1
+            X_normal_flat = tf.keras.layers.Flatten()(X_normal)
+            # fork: to policy and value_fn
+            cnn_1 = self._create_conv2d_layer(32, 2, 2)(X_normal)
+            cnn_2 = self._create_conv2d_layer(32, 2, 1)(cnn_1)
+            flat_layer_3 = tf.keras.layers.Flatten()(cnn_2)
+            concat_X_cnn = tf.keras.layers.concatenate(
+                [X_normal_flat, flat_layer_3])
+            policy_dense_4 = self._create_dense_layer(64)(concat_X_cnn)
+            policy_logits = self._create_dense_layer(num_actions,
+                                                     act_fn=None)(policy_dense_4)
+            value_dense_4 = self._create_dense_layer(32)(flat_layer_3)
+            value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_4)
 
-        self.value_dense_4 = self._create_dense_layer(32)
-        self.value_fn = self._create_dense_layer(1, act_fn=None)
+        self.policy_logits = policy_logits
+        self.value_fn = value_fn
 
+        self._model = \
+            tf.keras.Model(inputs=X,
+                           outputs=[self.policy_logits,
+                                    self.value_fn],
+                           name='A2CModel') 
 
     def call(self, X: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
-        X_normal = X / 4.0 + 1
-        X_normal_flat = self.X_normal_flat(X_normal)
-        cnn_1 = self.cnn_1(X_normal)
-        cnn_2 = self.cnn_2(cnn_1)
-        flat_3 = self.flat_layer_3(cnn_2)
-        concat_X_cnn = self.concat_X_cnn([X_normal_flat, flat_3])
-        policy_dense_4 = self.policy_dense_4(concat_X_cnn)
-        policy_logits = self.policy_logits(policy_dense_4)
+        policy_logits, value = self._model(X)
+        return policy_logits, value
 
-        value_dense_4 = self.value_dense_4(concat_X_cnn)
-        value = self.value_fn(value_dense_4)
-
-        return policy_logits, value 
+    def save_model(self, model_path):
+        self._model.save(model_path)
+    
+    def load_model(self, model_path):
+        self._model=tf.keras.models.load_model(model_path)
 
     @staticmethod
     def _create_conv2d_layer(num_filters, kernel_size, strides):
@@ -56,6 +64,7 @@ class A2CModel(tf.keras.Model):
     @staticmethod
     def _create_dense_layer(num_nodes, act_fn=tf.nn.relu):
         return tf.keras.layers.Dense(units=num_nodes, activation=act_fn)
+    
 
 
 if __name__ == '__main__':
