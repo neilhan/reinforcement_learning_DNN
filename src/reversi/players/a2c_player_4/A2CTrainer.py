@@ -38,7 +38,7 @@ class A2CTrainer:
         self.dist = lambda lgt: tf.squeeze(
             tf.random.categorical(tf.math.log(lgt), 1), axis=-1)
 
-        self.model = model 
+        self.model = model
 
     def get_action_value(self, observation, all_valid_moves, force_valid=False):
         action_logits, output_values = self.model.call(observation)
@@ -178,7 +178,8 @@ class A2CTrainer:
         grads = tape.gradient(loss, self.model._model.trainable_variables)
 
         # Apply the gradients to the model's parameters
-        optimizer.apply_gradients(zip(grads, self.model._model.trainable_variables))
+        optimizer.apply_gradients(
+            zip(grads, self.model._model.trainable_variables))
 
         episode_reward = tf.math.reduce_sum(rewards)
 
@@ -199,6 +200,8 @@ class A2CTrainer:
         log_reward_interval = 500
         log_game_interval = 1000
         save_model_interval = 5000
+        best_reward = -99999999
+        best_reward_batch = -99999999
 
         # with tqdm.trange(max_episodes) as t:
         #   for i in t:
@@ -214,10 +217,16 @@ class A2CTrainer:
                                                  max_steps_per_episode))
 
             running_reward = episode_reward * 0.01 + running_reward * 0.99
+            if episode_reward > best_reward:
+                best_reward = episode_reward
+            if episode_reward > best_reward_batch:
+                best_reward_batch = episode_reward
 
             # Show average episode reward every 10 episodes
             if i % log_reward_interval == 0:
-                print(f'Episode {i}: average reward: {running_reward}')
+                logging.info(
+                    f'Episode {i}: Over all Best: {best_reward}, Batch Best: {best_reward_batch}, Average reward: {running_reward}')
+                best_reward_batch = -999999999
 
             if i % log_game_interval == 0:
                 self.is_log_env = False

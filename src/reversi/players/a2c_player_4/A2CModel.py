@@ -24,13 +24,13 @@ class A2CModel:
             X_normal = X / 4.0 + 1
             X_normal_flat = tf.keras.layers.Flatten()(X_normal)
             # fork: to policy and value_fn
-            cnn_1 = self._create_conv2d_layer(8, 2, 1)(X_normal)
-            cnn_2 = self._create_conv2d_layer(8, 2, 1)(cnn_1)
-            cnn_3 = self._create_conv2d_layer(8, 2, 1)(cnn_2)
-            flat_layer_3 = tf.keras.layers.Flatten()(cnn_3)
+            cnn_1 = self._create_conv2d_layer(64, 3, 1)(X_normal)
+            cnn_2 = self._create_conv2d_layer(64, 3, 1)(cnn_1)
+            # cnn_3 = self._create_conv2d_layer(32, 2, 1)(cnn_2)
+            flat_layer_3 = tf.keras.layers.Flatten()(cnn_2)
             concat_X_cnn = tf.keras.layers.concatenate(
                 [X_normal_flat, flat_layer_3])
-            policy_dense_4 = self._create_dense_layer(64)(concat_X_cnn)
+            policy_dense_4 = self._create_dense_layer(128)(concat_X_cnn)
             policy_logits = self._create_dense_layer(num_actions,
                                                      act_fn=None)(policy_dense_4)
             value_dense_4 = self._create_dense_layer(64)(flat_layer_3)
