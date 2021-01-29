@@ -202,7 +202,7 @@ class A2CTrainer:
         reward_threshold = 195
         running_reward = 0
         log_reward_interval = 500
-        log_game_interval = 1_000
+        log_game_interval = 5_000
         save_model_interval = 15_000
         best_reward = -99999999
         best_reward_batch = -99999999

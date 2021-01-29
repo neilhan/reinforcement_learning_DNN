@@ -63,7 +63,7 @@ class GameWrapper:
             # execute a move, place a piece
             spot = self.convert_action_to_spot(action)
             if self.is_log_play:
-                self.log_move(spot, self)
+                self.log_move(spot, self)  # --------
             move_result = self.game_board.get_new_board_for_a_move(
                 self.current_player, spot)
             self.game_board = move_result.new_game_board
@@ -100,7 +100,7 @@ class GameWrapper:
             # the current_player, not next player, observation
             spot = None
             if self.is_log_play:
-                self.log_move(spot, self)
+                self.log_move(spot, self)  # --------
             num_possible_moves = len(
                 self.game_board.get_valid_spots(self.current_player))
             if num_possible_moves > 0:
@@ -115,6 +115,7 @@ class GameWrapper:
             game_ended = self.game_board.game_ended
             observation = self.observe(self.current_player)
 
+        self.log_move_result(self)  # --------
         return (observation, reward_of_this_move, game_ended, self, is_move_valid)
 
     def get_all_valid_moves(self):
@@ -132,9 +133,10 @@ class GameWrapper:
         else:
             move_str = spot.to_friendly_format()
         logging.info('Current player: %1d Placing: %s' % (game.current_player, move_str))
+        logging.info('------------------------')
     def log_move_result(self, game: GameWrapper):
         logging.info('Game ended?', game.game_ended)
-        logging.info('^^^^^^^^^^^^^^^^^^^^^^^^')
+        logging.info('^^========================^^')
 
     def pick_a_random_valid_move(self) -> int:
         # return action
