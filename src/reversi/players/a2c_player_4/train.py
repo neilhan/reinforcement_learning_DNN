@@ -51,6 +51,6 @@ if __name__ == '__main__':
 
     model = do_training(max_episodes=1_000_000, board_size=6,
                         optimizer_learn_rate=0.0007,
-                        model_save_path='./__models__/a2c_player_4/',
+                        model_save_path='./__models__/a2c_player_4_6x6/',
                         tensorboard_path='./__models__/a2c_player_4_tensorboard/' + '-' + timestamp,
                         load_saved_model=True)

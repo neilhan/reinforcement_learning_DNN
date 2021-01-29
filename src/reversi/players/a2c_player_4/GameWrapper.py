@@ -115,7 +115,8 @@ class GameWrapper:
             game_ended = self.game_board.game_ended
             observation = self.observe(self.current_player)
 
-        self.log_move_result(self)  # --------
+        if self.is_log_play:
+            self.log_move_result(self)  # --------
         return (observation, reward_of_this_move, game_ended, self, is_move_valid)
 
     def get_all_valid_moves(self):
@@ -132,10 +133,12 @@ class GameWrapper:
             move_str = 'PASS'
         else:
             move_str = spot.to_friendly_format()
-        logging.info('Current player: %1d Placing: %s' % (game.current_player, move_str))
+        logging.info('Current player: %1d Placing: %s' %
+                     (game.current_player, move_str))
         logging.info('------------------------')
+
     def log_move_result(self, game: GameWrapper):
-        logging.info('Game ended?', game.game_ended)
+        logging.info('Game ended? ' + str(game.game_ended))
         logging.info('^^========================^^')
 
     def pick_a_random_valid_move(self) -> int:
@@ -157,7 +160,7 @@ class GameWrapper:
 
 
 class GameWrapperInpatient(GameWrapper):
-    def __init__(self, id: int=1, board_size=8, max_invalid_moves_before_reset=0):
+    def __init__(self, id: int = 1, board_size=8, max_invalid_moves_before_reset=0):
         super().__init__(id, board_size)
 
         self.invalid_count = 0
@@ -171,7 +174,7 @@ class GameWrapperInpatient(GameWrapper):
             action)
         if not is_move_valid:
             self.invalid_count = self.invalid_count + 1
-        else: # reset counter
+        else:  # reset counter
             self.invalid_count = 0
 
         if self.invalid_count > self.max_invalid_moves_before_reset:
