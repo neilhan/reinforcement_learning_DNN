@@ -43,10 +43,11 @@ class A2CModel:
             # dense_shared_1_bn = tf.keras.layers.BatchNormalization()(dense_shared_1)
 
             dense_shared_2 = self._create_dense_layer(128)(dense_shared_1)
-            dense_shared_2_bn = tf.keras.layers.BatchNormalization()(dense_shared_2)
+            # dense_shared_2_drop = tf.keras.layers.Dropout(rate=0.2)(dense_shared_2)
+            # dense_shared_2_bn = tf.keras.layers.BatchNormalization()(dense_shared_2)
 
             short_cut = \
-                tf.keras.layers.concatenate([X_normal_flat, dense_shared_2_bn])
+                tf.keras.layers.concatenate([X_normal_flat, dense_shared_2])
 
             # fork: -> policy
             policy_dense_1 = self._create_dense_layer(64)(short_cut)

@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from reversi.tf_utils import set_global_seeds
-from reversi.players.a2c_player_4.A2CModel8x8bn import A2CModel
+from reversi.players.a2c_player_4.A2CModel6x6bn import A2CModel
 from reversi.players.a2c_player_4.A2CTrainer import A2CTrainer
 from reversi.players.a2c_player_4.GameWrapper import GameWrapperInpatient
 
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     # OPTIONAL: ADD A TIMESTAMP FOR UNIQUE FOLDER
     timestamp = datetime.now().strftime("%Y-%m-%d--%H%M")
 
-    model = do_training(max_episodes=1_000_000, board_size=8,
+    model = do_training(max_episodes=1_000_000, board_size=6,
                         optimizer_learn_rate=0.0001,
-                        model_save_path='./__models__/a2c_player_4_8x8_bn/',
-                        tensorboard_path='./__models__/a2c_player_4_tensorboard_8x8_bn/' + '-' + timestamp,
-                        load_saved_model=False)
+                        model_save_path='./__models__/a2c_player_4_6x6/',
+                        tensorboard_path='./__models__/a2c_player_4_6x6_drop_tensorboard/' + '-' + timestamp,
+                        load_saved_model=True)
