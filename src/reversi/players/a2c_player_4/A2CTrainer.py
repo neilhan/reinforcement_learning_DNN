@@ -220,6 +220,8 @@ class A2CTrainer:
                 self.env.set_log_play(True)
 
             initial_state = tf.constant(initial_state_np, dtype=tf.float32)
+
+            # training -------------------------------
             episode_reward = int(self.train_step(initial_state,  # model,
                                                  self.optimizer, gamma,
                                                  max_steps_per_episode))

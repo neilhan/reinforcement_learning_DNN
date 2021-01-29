@@ -23,21 +23,52 @@ class A2CModel:
             X = tf.keras.Input(shape=vision_shape, dtype=tf.dtypes.float32)
             X_normal = X / 4.0 + 1
             X_normal_flat = tf.keras.layers.Flatten()(X_normal)
-            # fork: to policy and value_fn
-            cnn_1 = self._create_conv2d_layer(64, 3, 1)(X_normal)
-            cnn_2 = self._create_conv2d_layer(64, 3, 1)(cnn_1)
-            # cnn_3 = self._create_conv2d_layer(32, 2, 1)(cnn_2)
-            flat_layer_3 = tf.keras.layers.Flatten()(cnn_2)
-            concat_X_cnn = tf.keras.layers.concatenate(
-                [X_normal_flat, flat_layer_3])
-            policy_dense_4 = self._create_dense_layer(128)(concat_X_cnn)
-            policy_logits = self._create_dense_layer(num_actions,
-                                                     act_fn=None)(policy_dense_4)
-            value_dense_4 = self._create_dense_layer(64)(concat_X_cnn)
-            value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_4)
+            # fork x. -> cnn ----> flat --> policy
+            #      x ----------/        \-> value
 
-        self.policy_logits = policy_logits
-        self.value_fn = value_fn
+            cnn_1 = self._create_conv2d_layer(64, 3, 1)(X_normal)
+            # cnn_1_bn = tf.keras.layers.BatchNormalization()(cnn_1)
+
+            cnn_2 = self._create_conv2d_layer(64, 3, 1)(cnn_1)
+            # cnn_2_bn = tf.keras.layers.BatchNormalization()(cnn_2)
+
+            # cnn_3 = self._create_conv2d_layer(64, 2, 1)(cnn_2)
+
+            flat_layer = tf.keras.layers.Flatten()(cnn_2)
+
+            concat_X_cnn = \
+                tf.keras.layers.concatenate([X_normal_flat, flat_layer])
+
+            dense_shared_1 = self._create_dense_layer(256)(concat_X_cnn)
+            # dense_shared_1_bn = tf.keras.layers.BatchNormalization()(dense_shared_1)
+
+            dense_shared_2 = self._create_dense_layer(128)(dense_shared_1)
+            dense_shared_2_bn = tf.keras.layers.BatchNormalization()(dense_shared_2)
+
+            short_cut = \
+                tf.keras.layers.concatenate([X_normal_flat, dense_shared_2_bn])
+
+            # fork: -> policy
+            policy_dense_1 = self._create_dense_layer(64)(short_cut)
+            # policy_dense_1_bn = tf.keras.layers.BatchNormalization()(policy_dense_1)
+
+            policy_dense_2 = self._create_dense_layer(64)(policy_dense_1)
+            # policy_dense_1_bn = tf.keras.layers.BatchNormalization()(policy_dense_1)
+
+            policy_logits_out = self._create_dense_layer(num_actions,
+                                                         act_fn=None)(policy_dense_2)
+
+            # fork: -> value
+            value_dense_1 = self._create_dense_layer(64)(short_cut)
+            # value_dense_1_bn = tf.keras.layers.BatchNormalization()(value_dense_1)
+
+            value_dense_2 = self._create_dense_layer(32)(value_dense_1)
+            # value_dense_2_bn = tf.keras.layers.BatchNormalization()(value_dense_2)
+
+            value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_2)
+
+        self.policy_logits_out = policy_logits_out
+        self.value_out = value_fn
 
         # if tensorboard_path == None:
         #     callbacks = []
@@ -52,8 +83,8 @@ class A2CModel:
         #     callbacks = [tensorboard, ]
         self._model = \
             tf.keras.Model(inputs=X,
-                           outputs=[self.policy_logits,
-                                    self.value_fn],
+                           outputs=[self.policy_logits_out,
+                                    self.value_out],
                            name='A2CModel')
 
     def call(self, X: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
@@ -72,7 +103,8 @@ class A2CModel:
                                       strides=(strides, strides),
                                       kernel_size=kernel_size,
                                       activation=tf.nn.relu,
-                                      kernel_initializer='random_normal')
+                                      kernel_initializer='random_normal',
+                                      )
 
     @staticmethod
     def _create_dense_layer(num_nodes, act_fn=tf.nn.relu):
