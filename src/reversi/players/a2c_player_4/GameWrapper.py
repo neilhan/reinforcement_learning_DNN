@@ -16,9 +16,10 @@ class GameWrapper:
         self.PASS_TURN_ACTION = self.board_size * self.board_size
         self.reset()
 
-    def reset(self) -> np.ndarray:
+    def reset(self, game_reset_random=False) -> np.ndarray:
         # returns the observation of the board in one-d array. shape: (8*8,) float32
-        self.game_board = GameBoard.GameBoard(self.board_size)
+        self.game_board = GameBoard.GameBoard(self.board_size,
+                                              game_reset_random=game_reset_random)
         self.current_player = GameBoard.PLAYER_1
         self.game_ended = False
         self.is_log_play = False

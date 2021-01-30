@@ -22,11 +22,13 @@ class A2CTrainer:
                  env: GameWrapperInpatient,
                  model: A2CModel,
                  model_save_path='./__models__/a2c_player_4/',
-                 optimizer_learn_rate=0.001):
+                 optimizer_learn_rate=0.001,
+                 game_reset_random=True):
         # the action 0, to 63 are the moves to take. The action 64 is pass this turn.
         # the last one is pass to other player
         self.PASS_TURN_ACTION = model.num_actions
 
+        self.game_reset_random = game_reset_random
         self.env = env  # gym.make("CartPole-v0")
         self.is_log_env = False
         self.model_save_path = model_save_path
@@ -210,7 +212,7 @@ class A2CTrainer:
         # with tqdm.trange(max_episodes) as t:
         #   for i in t:
         for i in range(max_episodes):
-            initial_state_np = self.env.reset()
+            initial_state_np = self.env.reset(game_reset_random=self.game_reset_random)
             # random switch to player 2
             if bool(random.getrandbits(1)):
                 initial_state_np, _, _ = self._opponent_step(initial_state_np)

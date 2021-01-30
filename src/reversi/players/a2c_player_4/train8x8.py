@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from reversi.tf_utils import set_global_seeds
-from reversi.players.a2c_player_4.A2CModel8x8bn import A2CModel
+from reversi.players.a2c_player_4.A2CModel8x8 import A2CModel
 from reversi.players.a2c_player_4.A2CTrainer import A2CTrainer
 from reversi.players.a2c_player_4.GameWrapper import GameWrapperInpatient
 
@@ -16,7 +16,8 @@ def do_training(board_size=8,
                 optimizer_learn_rate=0.001,
                 model_save_path='./__models__/a2c_player_4/',
                 tensorboard_path='./__models__/a2c_player_4_tensorboard/',
-                load_saved_model=False):
+                load_saved_model=False,
+                game_reset_random=True):
     set_global_seeds(0)
 
     model = A2CModel(vision_shape=(board_size, board_size, 1),
@@ -32,7 +33,8 @@ def do_training(board_size=8,
 
     trainer = A2CTrainer(env, model,
                          optimizer_learn_rate=optimizer_learn_rate,
-                         model_save_path=model_save_path)
+                         model_save_path=model_save_path,
+                         game_reset_random=game_reset_random)
 
     trainer.train(max_episodes)
 
@@ -50,7 +52,8 @@ if __name__ == '__main__':
     timestamp = datetime.now().strftime("%Y-%m-%d--%H%M")
 
     model = do_training(max_episodes=1_000_000, board_size=8,
-                        optimizer_learn_rate=0.00002,
+                        optimizer_learn_rate=1.0e-4,
                         model_save_path='./__models__/a2c_player_4_8x8/',
                         tensorboard_path='./__models__/a2c_player_4_8x8_drop_tensorboard/' + '-' + timestamp,
-                        load_saved_model=True)
+                        load_saved_model=False, 
+                        game_reset_random=True)

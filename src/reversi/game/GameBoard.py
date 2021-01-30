@@ -1,4 +1,5 @@
 from __future__ import annotations
+import random
 
 import itertools
 import copy
@@ -130,22 +131,32 @@ class ResultOfAMove:
 
 class GameBoard:
     # note, 6, 8 size board are supported. Not supporting > 8 board
-    def __init__(self, board_size=8):
+    def __init__(self, board_size=8, game_reset_random=False):
+        self.board_size = board_size 
         if board_size % 2 > 0:
             raise ValueError('board_size needs to be > 4, and even number.')
+
         self.board = [[0.0]*board_size for _ in range(board_size)]
+        # this is to help seed the agent. Otherwise agen will overfit
+        if game_reset_random:
+            for r in range(self.board_size):
+                for c in range(self.board_size):
+                    self.board[r][c] = random.choice(
+                        [PLAYER_1, 0, 0, PLAYER_2])
+
         self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_1
         self.board[int(board_size/2)][int(board_size/2)] = PLAYER_1
         self.board[int(board_size/2-1)][int(board_size/2)] = PLAYER_2
         self.board[int(board_size/2)][int(board_size/2-1)] = PLAYER_2
 
-        self.board_size = board_size
         self.game_ended = False
         self.winner = 0
         self.player_1_count = 2
         self.player_2_count = 2
         self.possible_moves_player_1 = self.get_valid_spots(PLAYER_1)
         self.possible_moves_player_2 = self.get_valid_spots(PLAYER_2)
+
+
 
     def update_status(self):
         self.possible_moves_player_1 = self.get_valid_spots(PLAYER_1)
@@ -214,7 +225,7 @@ class GameBoard:
     def observe_board_1d(self):
         flat = list(itertools.chain.from_iterable(self.board))
         return flat
-    
+
     def observe_board_2d(self):
         # returns board as 2d array
         return self.board

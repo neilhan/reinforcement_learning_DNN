@@ -21,15 +21,15 @@ class A2CModel:
 
         with tf.name_scope('model'):
             X = tf.keras.Input(shape=vision_shape, dtype=tf.dtypes.float32)
-            X_normal = X / 4.0 + 1
+            X_normal = X / 1.3
             X_normal_flat = tf.keras.layers.Flatten()(X_normal)
             # fork x. -> cnn ----> flat --> policy
             #      x ----------/        \-> value
 
-            cnn_1 = self._create_conv2d_layer(32, 3, 1)(X_normal)
+            cnn_1 = self._create_conv2d_layer(64, 3, 1)(X_normal)
             # cnn_1_bn = tf.keras.layers.BatchNormalization()(cnn_1)
 
-            cnn_2 = self._create_conv2d_layer(64, 2, 1)(cnn_1)
+            cnn_2 = self._create_conv2d_layer(128, 2, 1)(cnn_1)
             # cnn_2_bn = tf.keras.layers.BatchNormalization()(cnn_2)
 
             cnn_3 = self._create_conv2d_layer(128, 2, 1)(cnn_2)
@@ -39,31 +39,33 @@ class A2CModel:
             concat_X_cnn = \
                 tf.keras.layers.concatenate([X_normal_flat, flat_layer])
 
-            dense_shared_1 = self._create_dense_layer(128)(concat_X_cnn)
+            dense_shared_1 = self._create_dense_layer(256)(concat_X_cnn)
             # dense_shared_1_bn = tf.keras.layers.BatchNormalization()(dense_shared_1)
 
-            dense_shared_2 = self._create_dense_layer(128)(dense_shared_1)
-            # dense_shared_2_drop = tf.keras.layers.Dropout(rate=0.2)(dense_shared_2)
+            dense_shared_2 = self._create_dense_layer(256)(dense_shared_1)
+            # dense_shared_2_drop = tf.keras.layers.Dropout(rate=0.3)(dense_shared_2)
             # dense_shared_2_bn = tf.keras.layers.BatchNormalization()(dense_shared_2)
 
             short_cut = \
                 tf.keras.layers.concatenate([X_normal_flat, dense_shared_2])
 
             # fork: -> policy
-            policy_dense_1 = self._create_dense_layer(64)(short_cut)
+            policy_dense_1 = self._create_dense_layer(128)(short_cut)
             # policy_dense_1_bn = tf.keras.layers.BatchNormalization()(policy_dense_1)
 
             policy_dense_2 = self._create_dense_layer(64)(policy_dense_1)
+            # policy_dense_2_drop = tf.keras.layers.Dropout(rate=0.3)(policy_dense_2)
             # policy_dense_1_bn = tf.keras.layers.BatchNormalization()(policy_dense_1)
 
             policy_logits_out = self._create_dense_layer(num_actions,
                                                          act_fn=None)(policy_dense_2)
 
             # fork: -> value
-            value_dense_1 = self._create_dense_layer(32)(short_cut)
+            value_dense_1 = self._create_dense_layer(64)(short_cut)
             # value_dense_1_bn = tf.keras.layers.BatchNormalization()(value_dense_1)
 
             value_dense_2 = self._create_dense_layer(32)(value_dense_1)
+            # value_dense_2_drop = tf.keras.layers.Dropout(rate=0.3)(value_dense_2)
             # value_dense_2_bn = tf.keras.layers.BatchNormalization()(value_dense_2)
 
             value_fn = self._create_dense_layer(1, act_fn=None)(value_dense_2)
