@@ -23,4 +23,4 @@ USER appuser
 
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "src/reversi/train_a2c_player.py"]
+CMD ["python", "src/othello/train_a2c_player.py"]

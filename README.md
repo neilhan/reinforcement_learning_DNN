@@ -58,5 +58,5 @@ pip3 install --ignore-installed PyYAML
 python -m unittest discover -s project_directory -p "*_test.py"
 ```
 
-# Reversi
+# othello
 20210113
