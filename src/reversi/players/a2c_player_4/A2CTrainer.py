@@ -84,7 +84,8 @@ class A2CTrainer:
                 self.env.execute_move(action)
 
             if not done:
-                opponent_observation, opponent_reward, done = self._opponent_step(state)
+                opponent_observation, opponent_reward, done = self._opponent_step(
+                    state)
                 # update state
                 state = opponent_observation
                 if done:
@@ -179,10 +180,11 @@ class A2CTrainer:
 
             # Calculating loss values to update our network
             loss = A2CTrainer.compute_loss(action_probs, values, returns)
-
         # Compute the gradients from the loss
         grads = tape.gradient(loss, self.model._model.trainable_variables)
-
+        # Try to learn more when the game play is more successful
+        # scalar = tf.cast(tf.size(rewards), dtype=tf.float32)*0.3 # * 3 - 2)
+        # grads =[tf.math.scalar_mul(scalar, i) for i in grads]
         # Apply the gradients to the model's parameters
         optimizer.apply_gradients(
             zip(grads, self.model._model.trainable_variables))
@@ -212,7 +214,8 @@ class A2CTrainer:
         # with tqdm.trange(max_episodes) as t:
         #   for i in t:
         for i in range(max_episodes):
-            initial_state_np = self.env.reset(game_reset_random=self.game_reset_random)
+            initial_state_np = self.env.reset(
+                game_reset_random=self.game_reset_random)
             # random switch to player 2
             if bool(random.getrandbits(1)):
                 initial_state_np, _, _ = self._opponent_step(initial_state_np)

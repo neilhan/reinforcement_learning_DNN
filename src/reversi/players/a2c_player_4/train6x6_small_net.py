@@ -56,4 +56,4 @@ if __name__ == '__main__':
                         model_save_path='./__models__/a2c_player_4_6x6_small_net/',
                         tensorboard_path='./__models__/a2c_player_4_6x6_small_net_tensorboard/' + '-' + timestamp,
                         load_saved_model=True,
-                        game_reset_random=True)
+                        game_reset_random=False)
