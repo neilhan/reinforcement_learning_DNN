@@ -194,9 +194,15 @@ returns = [avg_return]
 
 for _ in range(num_iterations):
     # -> replay_buffer. -> iterator(replay_buffer.as_dataset)
-    collect_data(train_env, agent.collect_policy,
-                 replay_buffer, collect_steps_per_iteration)
+    collect_data(train_env,
+                 agent.collect_policy,
+                 replay_buffer,
+                 collect_steps_per_iteration)
     experience, unused_info = next(iterator)
+    # experience? trajectory is an episode. info?
+    # print('-------------------------')
+    # print('In training experience:', experience)
+    # print('In training buffer_info:', unused_info)
     train_loss = agent.train(experience).loss
 
     step = agent.train_step_counter.numpy()
