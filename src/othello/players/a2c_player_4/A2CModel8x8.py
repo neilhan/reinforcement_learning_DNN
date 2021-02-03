@@ -21,7 +21,7 @@ class A2CModel:
 
         with tf.name_scope('model'):
             X = tf.keras.Input(shape=vision_shape, dtype=tf.dtypes.float32)
-            X_normal = X / 1.3
+            X_normal = X 
             X_normal_flat = tf.keras.layers.Flatten()(X_normal)
             # fork x. -> cnn ---+-> flat -+--> policy
             #      x ----------/           \-> value
@@ -63,10 +63,10 @@ class A2CModel:
                                                          act_fn=None)(policy_dense_2)
 
             # fork: -> value
-            value_dense_1 = self._create_dense_layer(64)(short_cut)
+            value_dense_1 = self._create_dense_layer(256)(short_cut)
             # value_dense_1_bn = tf.keras.layers.BatchNormalization()(value_dense_1)
 
-            value_dense_2 = self._create_dense_layer(32)(value_dense_1)
+            value_dense_2 = self._create_dense_layer(64)(value_dense_1)
             # value_dense_2_drop = tf.keras.layers.Dropout(rate=0.3)(value_dense_2)
             # value_dense_2_bn = tf.keras.layers.BatchNormalization()(value_dense_2)
 

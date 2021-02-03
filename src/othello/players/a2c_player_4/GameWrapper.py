@@ -86,9 +86,9 @@ class GameWrapper:
                 if move_result.is_move_valid:
                     reward_of_this_move = 1.0
                 else:
-                    reward_of_this_move = -1.0  # invalid move
+                    reward_of_this_move = -1000.0  # invalid move <----------
 
-            # update to new state. Switch player etc
+            # update to new state. Switch player etc -------------
             if move_result.is_move_valid:  # next player
                 self.current_player = self.game_board.get_next_player(
                     self.current_player)
@@ -105,7 +105,7 @@ class GameWrapper:
             num_possible_moves = len(
                 self.game_board.get_valid_spots(self.current_player))
             if num_possible_moves > 0:
-                reward_of_this_move = -2 * num_possible_moves
+                reward_of_this_move = -1000 - 2 * num_possible_moves
                 is_move_valid = False
             else:  # right move, needs to pass
                 self.current_player = self.game_board.get_next_player(
@@ -183,6 +183,6 @@ class GameWrapperInpatient(GameWrapper):
             #     self.max_invalid_moves_before_reset))
             # super().reset()
             self.invalid_count = 0
-            return observation, -1000.0, 1.0, self, is_move_valid
+            return observation, reward, 1.0, self, is_move_valid
         else:
             return observation, reward, done, self, is_move_valid

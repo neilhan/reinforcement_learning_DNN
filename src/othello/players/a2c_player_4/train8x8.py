@@ -52,8 +52,8 @@ if __name__ == '__main__':
     timestamp = datetime.now().strftime("%Y-%m-%d--%H%M")
 
     model = do_training(max_episodes=1_000_000, board_size=8,
-                        optimizer_learn_rate=1.0e-5,
+                        optimizer_learn_rate=1e-3,
                         model_save_path='./__models__/a2c_player_4_8x8/',
                         tensorboard_path='./__models__/a2c_player_4_8x8_drop_tensorboard/' + '-' + timestamp,
-                        load_saved_model=False, 
+                        load_saved_model=True, 
                         game_reset_random=False)
