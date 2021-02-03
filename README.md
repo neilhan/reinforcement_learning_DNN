@@ -50,6 +50,9 @@ pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
 pip install -r requirements.txt --upgrade
 
+# upgrade all packages 
+pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install -U 
+
 pip freeze > requirements.txt
 
 # trouble with pyYAML, versions older than 4.x were not safe
@@ -62,7 +65,8 @@ python -m unittest discover -s project_directory -p "*_test.py"
 20210113
 
 # notes
-```
+``` 
 git@github.com:rmsander/marl_ppo.git
 docker run -it --gpus 1 tensorflow/tensorflow:latest-gpu-jupyter
 docker run -it --gpus all tensorflow/tensorflow:latest-gpu-jupyter
+```
