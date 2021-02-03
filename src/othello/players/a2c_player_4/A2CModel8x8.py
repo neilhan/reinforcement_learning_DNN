@@ -21,7 +21,7 @@ class A2CModel:
 
         with tf.name_scope('model'):
             X = tf.keras.Input(shape=vision_shape, dtype=tf.dtypes.float32)
-            X_normal = X 
+            X_normal = X
             X_normal_flat = tf.keras.layers.Flatten()(X_normal)
             # fork x. -> cnn ---+-> flat -+--> policy
             #      x ----------/           \-> value
@@ -35,13 +35,13 @@ class A2CModel:
             # cnn_3 = self._create_conv2d_layer(128, 2, 1)(cnn_2)
 
             flat_layer = tf.keras.layers.Flatten()(cnn_2)
-
             concat_X_cnn = \
                 tf.keras.layers.concatenate([X_normal_flat, flat_layer])
 
             dense_shared_1 = self._create_dense_layer(1024)(concat_X_cnn)
             # dense_shared_1_bn = tf.keras.layers.BatchNormalization()(dense_shared_1)
 
+            # todo try 512 units??
             dense_shared_2 = self._create_dense_layer(256)(dense_shared_1)
             # dense_shared_2_drop = tf.keras.layers.Dropout(rate=0.3)(dense_shared_2)
             # dense_shared_2_bn = tf.keras.layers.BatchNormalization()(dense_shared_2)

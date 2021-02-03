@@ -15,8 +15,11 @@ class GameWrapper:
         self.board_size = board_size
         self.PASS_TURN_ACTION = self.board_size * self.board_size
         self.reset()
+        self.INVALID_REWARD = -600
 
     def reset(self, game_reset_random=False) -> np.ndarray:
+        # if random game, apply another random
+        game_reset_random = game_reset_random and random.choice([True, False, False])
         # returns the observation of the board in one-d array. shape: (8*8,) float32
         self.game_board = GameBoard.GameBoard(self.board_size,
                                               game_reset_random=game_reset_random)
@@ -85,8 +88,12 @@ class GameWrapper:
             else:
                 if move_result.is_move_valid:
                     reward_of_this_move = 1.0
-                else:
-                    reward_of_this_move = -1000.0  # invalid move <----------
+                else:  # invalid move <----------
+                    # has no piece, invalid_reward
+                    reward_of_this_move = self.INVALID_REWARD
+                    # has piece, -1001
+                    if self.game_board.get_spot_state(spot) != 0:
+                        reward_of_this_move = self.INVALID_REWARD - 2.0
 
             # update to new state. Switch player etc -------------
             if move_result.is_move_valid:  # next player
@@ -105,7 +112,7 @@ class GameWrapper:
             num_possible_moves = len(
                 self.game_board.get_valid_spots(self.current_player))
             if num_possible_moves > 0:
-                reward_of_this_move = -1000 - 2 * num_possible_moves
+                reward_of_this_move = self.INVALID_REWARD - 2 * num_possible_moves
                 is_move_valid = False
             else:  # right move, needs to pass
                 self.current_player = self.game_board.get_next_player(

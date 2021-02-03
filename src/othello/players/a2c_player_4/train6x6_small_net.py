@@ -51,9 +51,9 @@ if __name__ == '__main__':
     # OPTIONAL: ADD A TIMESTAMP FOR UNIQUE FOLDER
     timestamp = datetime.now().strftime("%Y-%m-%d--%H%M")
 
-    model = do_training(max_episodes=1_000_000, board_size=6,
-                        optimizer_learn_rate=1e-3,
-                        model_save_path='./__models__/a2c_player_4_6x6_small_net_lr_e3/',
+    model = do_training(max_episodes=10_000_000, board_size=6,
+                        optimizer_learn_rate=1e-4,
+                        model_save_path='./__models__/a2c_player_4_6x6_small_net_lr_e4/',
                         tensorboard_path='./__models__/a2c_player_4_6x6_small_net_tensorboard/' + '-' + timestamp,
                         load_saved_model=True,
-                        game_reset_random=False)
+                        game_reset_random=True)

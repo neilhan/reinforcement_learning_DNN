@@ -9,7 +9,7 @@ import tensorflow as tf
 import tf_agents as tfa
 from tf_agents.networks import q_network
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.environments import suite_gym, tf_py_environment
+from tf_agents.environments import suite_gym, tf_py_environment, parallel_py_environment
 from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.trajectories import trajectory
