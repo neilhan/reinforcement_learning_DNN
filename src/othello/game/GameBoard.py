@@ -331,7 +331,7 @@ class GameBoard:
     # returns new game state, it's a new deepcopy GameBoard,
     # {game, flipped, valid_move: true/false}
     def get_new_board_for_a_move(self, player_id: int, spot: Spot) -> ResultOfAMove:
-        if self.get_spot_state(spot) > 0:
+        if self.get_spot_state(spot) != 0:
             # invalid move
             return ResultOfAMove(self, [], False)
 

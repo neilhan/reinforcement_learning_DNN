@@ -96,7 +96,7 @@ class GameWrapper:
             # observation for next player
             observation = self.observe(self.current_player)
             is_move_valid = move_result.is_move_valid
-        else:  # pass, turn to opponent
+        else:  # pass. opponent's turn
             # no move to make, so just observe.
             # the current_player, not next player, observation
             spot = None

@@ -60,3 +60,9 @@ python -m unittest discover -s project_directory -p "*_test.py"
 
 # othello
 20210113
+
+# notes
+```
+git@github.com:rmsander/marl_ppo.git
+docker run -it --gpus 1 tensorflow/tensorflow:latest-gpu-jupyter
+docker run -it --gpus all tensorflow/tensorflow:latest-gpu-jupyter

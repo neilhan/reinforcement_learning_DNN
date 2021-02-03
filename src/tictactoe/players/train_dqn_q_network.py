@@ -22,18 +22,18 @@ from tictactoe.TicTacToeEnv import TicTacToeEnv
 tf.compat.v1.enable_v2_behavior()
 
 # ------------------------------------------------------------
-checkpoint_dir = './__tf_agents__/dqn_tictactoe/checkpoint'
-policy_dir = './__tf_agents__/dqn_tictactoe/policy'
+checkpoint_dir = './__tf_agents__/dqn_tictactoe_lr_0.001/checkpoint'
+policy_dir = './__tf_agents__/dqn_tictactoe_lr_0.001/policy'
 
 # num_iterations = 105_000  # @param {type:"integer"}
-num_iterations = 50_000  # @param {type:"integer"}
+num_iterations = 5_000  # @param {type:"integer"}
 
 initial_collect_steps = 1000  # @param {type:"integer"}
 collect_steps_per_iteration = 1  # @param {type:"integer"}
 replay_buffer_capacity = 100000  # @param {type:"integer"}
 
-conv_layer_params = [(32, 2, 1), ]
-fc_layer_params = (100, 30,)
+# conv_layer_params = [(32, 2, 1), ]
+fc_layer_params = (60, 40,)
 
 batch_size = 64  # @param {type:"integer"}
 learning_rate = 1e-3  # @param {type:"number"}
@@ -76,7 +76,7 @@ def create_agent(train_env, global_step_counter):
 
     q_net = q_network.QNetwork(train_env.observation_spec(),
                                train_env.action_spec(),
-                               conv_layer_params=conv_layer_params,
+                               #    conv_layer_params=conv_layer_params,
                                fc_layer_params=fc_layer_params)
 
     # optimizer
@@ -202,10 +202,10 @@ def train_agent_and_save():
     replay_buffer, replay_buffer_itr = create_replay_buffer(train_env, agent)
 
     random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
-                                                     train_env.action_spec())
+                                                    train_env.action_spec())
     # compute_avg_return(eval_env, random_policy, num_eval_episodes)
-    for _ in range(3):
-         collect_step(train_env, random_policy, replay_buffer)
+    for _ in range(10):
+        collect_step(train_env, random_policy, replay_buffer)
 
     train_checkpointer = common.Checkpointer(ckpt_dir=checkpoint_dir,
                                              max_to_keep=1,
@@ -247,7 +247,7 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
         time_step = eval_env.reset()
         eval_py_env._log_on = True
         eval_py_env._exploring_opponent = False
-        # eval_py_env._random_start = False
+        eval_py_env._random_start = False
 
         while not time_step.is_last():
             action_step = agent_policy.action(time_step)
@@ -257,6 +257,18 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
         print('==============================')
 
 
+def train_main():
+    for i in range(50):
+        agent, eval_env, eval_py_env = train_agent_and_save()
+        demo_game_play(agent.policy, eval_env, eval_py_env)
+        print(f'============{i}==============')
+
+
+def demo_main():
+    policy = load_policy('./__tf_agents__/dqn_tictactoe/policy')
+    train_env, eval_env, train_py_env, eval_py_env = create_envs()
+    demo_game_play(policy, eval_env, eval_py_env)
+
+
 if __name__ == '__main__':
-    agent, eval_env, eval_py_env = train_agent_and_save()
-    demo_game_play(agent.policy, eval_env, eval_py_env)
+    train_main()
