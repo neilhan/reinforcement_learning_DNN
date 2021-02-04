@@ -45,29 +45,35 @@ class CustomNN(network.Network):
                                                               activation=tf.keras.activations.tanh,
                                                               kernel_initializer=initializer,
                                                               name='action')
+
     def call(self, observations, step_type=(), network_state=()):
-        outer_rank = nest_utils.get_outer_rank(observations, self.input_tensor_spec)
+        outer_rank = nest_utils.get_outer_rank(
+            observations, self.input_tensor_spec)
         # batch_squash, in case observations have a time sequence compoment.
         batch_squash = utils.BatchSquash(outer_rank)
-        observations = tf.nest.map_structure(batch_squash.flatten, observations)
+        observations = tf.nest.map_structure(
+            batch_squash.flatten, observations)
 
         state, network_state = self._encoder(observations,
-        step_type=step_type, 
-        network_state=network_state)
+                                             step_type=step_type,
+                                             network_state=network_state)
         actions = self._action_projection_layer(state)
         actions = common_utils.scale_to_spec(actions, self._single_action_spec)
         actions = batch_squash.unflatten(actions)
         return tf.nest.pack_sequence_as(self._action_spec, [actions]), network_state
 
-if __name__ == '__main__':
-    action_spec = array_spec.BoundedArraySpec((3,), np.float32, minimum=0, maximum=10)
-    observation_spec =  {
-        'image': array_spec.BoundedArraySpec((16, 16, 3), np.float32, minimum=0,
-                                            maximum=255),
-        'vector': array_spec.BoundedArraySpec((5,), np.float32, minimum=-100,
-                                            maximum=100)}
 
-    random_env = random_py_environment.RandomPyEnvironment(observation_spec, action_spec=action_spec)
+if __name__ == '__main__':
+    action_spec = array_spec.BoundedArraySpec(
+        (3,), np.float32, minimum=0, maximum=10)
+    observation_spec = {
+        'image': array_spec.BoundedArraySpec((16, 16, 3), np.float32, minimum=0,
+                                             maximum=255),
+        'vector': array_spec.BoundedArraySpec((5,), np.float32, minimum=-100,
+                                              maximum=100)}
+
+    random_env = random_py_environment.RandomPyEnvironment(
+        observation_spec, action_spec=action_spec)
 
     # Convert the environment to a TFEnv to generate tensors.
     tf_env = tf_py_environment.TFPyEnvironment(random_env)
