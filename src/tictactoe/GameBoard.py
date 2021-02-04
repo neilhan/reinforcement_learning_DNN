@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 import random
 
 import itertools
@@ -56,7 +56,7 @@ class Spot:
         col = action % board_size
         return Spot(row, col, board_size)
 
-    def from_friendly_format(self, friendly_format: str) -> Spot:
+    def from_friendly_format(self, friendly_format: str) -> 'Spot':
         # returns Spot
         if len(friendly_format) < 2:
             raise ValueError('At lease 2 characters. 1a, 1b, or 7h')
@@ -81,45 +81,45 @@ class Spot:
     def __str__(self):
         return "Spot(%i, %i)" % (self.row, self.col)
 
-    def step_left(self) -> Spot:
+    def step_left(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_right(self) -> Spot:
+    def step_right(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.col = new_spot.col + 1
         return new_spot
 
-    def step_up(self) -> Spot:
+    def step_up(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         return new_spot
 
-    def step_down(self) -> Spot:
+    def step_down(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         return new_spot
 
-    def step_up_left(self) -> Spot:
+    def step_up_left(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_up_right(self) -> Spot:
+    def step_up_right(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row - 1
         new_spot.col = new_spot.col + 1
         return new_spot
 
-    def step_down_left(self) -> Spot:
+    def step_down_left(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col - 1
         return new_spot
 
-    def step_down_right(self) -> Spot:
+    def step_down_right(self) -> 'Spot':
         new_spot = Spot(self.row, self.col, self.board_size)
         new_spot.row = new_spot.row + 1
         new_spot.col = new_spot.col + 1
@@ -128,7 +128,7 @@ class Spot:
 
 class ResultOfAMove:
     def __init__(self,
-                 new_game_board: GameBoard,
+                 new_game_board: 'GameBoard',
                  new_spot: Spot,
                  is_move_valid: bool,
                  game_ended: bool,
