@@ -17,6 +17,7 @@ from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
 from tictactoe.TicTacToeEnv import TicTacToeEnv
+from tictactoe.players.CustomNN import CustomNN
 
 
 tf.compat.v1.enable_v2_behavior()
@@ -74,10 +75,15 @@ def create_agent(train_env, global_step_counter):
     #                                               conv_layer_params=conv_layer_params,
     #                                               fc_layer_params=fc_layer_params)
 
-    q_net = q_network.QNetwork(train_env.observation_spec(),
-                               train_env.action_spec(),
-                               #    conv_layer_params=conv_layer_params,
-                               fc_layer_params=fc_layer_params)
+    # q_net = q_network.QNetwork(train_env.observation_spec(),
+    #                            train_env.action_spec(),
+    #                            #    conv_layer_params=conv_layer_params,
+    #                            fc_layer_params=fc_layer_params)
+
+    q_net = CustomNN(train_env.observation_spec(),
+                     train_env.action_spec(),
+                     #    conv_layer_params=conv_layer_params,
+                     fc_layer_params=fc_layer_params)
 
     # optimizer
     optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)

@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1
 ENV TF_XLA_FLAGS="--tf_xla_enable_xla_devices"
 
 # Install pip requirements
-COPY requirements.txt .
+# COPY requirements.3.6.9.txt ./requirements.txt
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN apt update -y
 RUN apt upgrade -y
