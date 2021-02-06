@@ -46,7 +46,7 @@ class CustomNN(network.Network):
                                                               activation=tf.keras.activations.tanh,
                                                               kernel_initializer=initializer,
                                                               name='action')
-        # this is only doing one layer
+        # this is only doing one layer for test the Custom model.
 
     def call(self, observations, step_type=(), network_state=()):
         outer_rank = nest_utils.get_outer_rank(
