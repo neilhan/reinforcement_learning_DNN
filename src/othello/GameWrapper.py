@@ -10,7 +10,7 @@ class GameWrapper:
         self.game_ended = False
 
     def execute_move(self, spot):
-        move_result = self.game_board.get_new_board_for_a_move(self.current_player, spot)
+        move_result = self.game_board.make_a_move(self.current_player, GameBoard.GameMove(spot))
 
         if not move_result.is_move_valid:
             raise ValueError('Invalid move.')

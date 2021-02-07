@@ -49,6 +49,15 @@ class Spot:
         # else:
         #     raise ValueError('row and col needs to be between [0, board_size)')
 
+    @staticmethod
+    def from_action_code(action, board_size=8):
+        row = action // board_size
+        col = action % board_size
+        return Spot(row, col, board_size)
+
+    def to_action_code(self):
+        return self.row * self.board_size + self.col
+
     def from_friendly_format(self, friendly_format: str) -> Spot:
         # returns Spot
         if len(friendly_format) < 2:
@@ -119,44 +128,72 @@ class Spot:
         return new_spot
 
 
+class GameMove:
+    def __init__(self, spot: Spot = None, pass_turn: bool = False):
+        self.spot = spot
+        self.pass_turn = pass_turn
+
+    @staticmethod
+    def from_action_code(action_code, board_size=8):
+        if action_code >= board_size*board_size:
+            return GameMove(pass_turn=True)
+        else:
+            return GameMove(spot=Spot.from_action_code(action_code, board_size))
+    def to_friendly_format(self):
+        if self.pass_turn:
+            return 'PASS'
+        else:
+            return self.spot.to_friendly_format()
+
+
 class ResultOfAMove:
     def __init__(self,
                  new_game_board: GameBoard,
+                 game_ended: bool,
+                 the_move: GameMove,
+                 is_move_valid: bool,
                  flipped_spots: list[Spot],
-                 is_move_valid: bool):
+                 ):
         self.new_game_board = new_game_board
-        self.flipped_spots = flipped_spots
+        self.game_ended = game_ended
+        self.the_move = the_move
         self.is_move_valid = is_move_valid
+        self.flipped_spots = flipped_spots
 
 
 class GameBoard:
     # note, 6, 8 size board are supported. Not supporting > 8 board
-    def __init__(self, board_size=8, game_reset_random=False):
-        self.board_size = board_size 
+    def __init__(self, board_size=8, random_start=False):
+        self.board_size = board_size
         if board_size % 2 > 0:
             raise ValueError('board_size needs to be > 4, and even number.')
+        self.reset(random_reset=random_start)
 
-        self.board = [[0.0]*board_size for _ in range(board_size)]
+    def reset(self, random_reset):
+        self.board = [[0.0]*self.board_size for _ in range(self.board_size)]
+        board_size = self.board_size
+        self.current_player = PLAYER_1
+        self.game_ended = False
+        self.winner = 0
+        self.player_1_count = 0
+        self.player_2_count = 0
+        self.possible_moves_player_1 = 0
+        self.possible_moves_player_2 = 0
+
         # this is to help seed the agent. Otherwise agen will overfit
-        if game_reset_random:
+        if random_reset:
             for r in range(self.board_size):
                 for c in range(self.board_size):
                     self.board[r][c] = random.choice(
                         [PLAYER_1, 0, 0, PLAYER_2])
+            # self.current_player = random.choice([PLAYER_1, PLAYER_2])
 
         self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_1
         self.board[int(board_size/2)][int(board_size/2)] = PLAYER_1
         self.board[int(board_size/2-1)][int(board_size/2)] = PLAYER_2
         self.board[int(board_size/2)][int(board_size/2-1)] = PLAYER_2
 
-        self.game_ended = False
-        self.winner = 0
-        self.player_1_count = 2
-        self.player_2_count = 2
-        self.possible_moves_player_1 = self.get_valid_spots(PLAYER_1)
-        self.possible_moves_player_2 = self.get_valid_spots(PLAYER_2)
-
-
+        self.update_status()
 
     def update_status(self):
         self.possible_moves_player_1 = self.get_valid_spots(PLAYER_1)
@@ -175,6 +212,7 @@ class GameBoard:
     def deepcopy(self):
         new_game = GameBoard(self.board_size)
         new_game.board = copy.deepcopy(self.board)
+        new_game.current_player = self.current_player
         new_game.game_ended = self.game_ended
         new_game.winner = self.winner
         new_game.player_1_count = self.player_1_count
@@ -243,14 +281,19 @@ class GameBoard:
 
         return len(list(filter(lambda s: s == player_id, all_spots)))
 
-    def get_next_player(self, current_player_id):
-        next_player_id = -current_player_id
+    def get_opponent_of(self, player_id):
+        opponent_player_id = player_id * -1
+        return opponent_player_id
 
-        valid_moves = self.get_valid_spots(next_player_id)
+    def get_next_player(self, player_id):
+        """Return who is the next valid player. If opponent has no valid move, the same player continue."""
+        opponent_id = self.get_opponent_of(player_id)
+
+        valid_moves = self.get_valid_spots(opponent_id)
         if len(valid_moves) > 0:
-            return next_player_id
+            return opponent_id
         else:
-            return current_player_id  # opponent has no moves, so current_player continue
+            return player_id  # opponent has no moves, so current_player continue
 
     # return new Game.
     def _flip(self, flipping_spots):
@@ -330,21 +373,57 @@ class GameBoard:
 
     # returns new game state, it's a new deepcopy GameBoard,
     # {game, flipped, valid_move: true/false}
-    def get_new_board_for_a_move(self, player_id: int, spot: Spot) -> ResultOfAMove:
-        if self.get_spot_state(spot) != 0:
-            # invalid move
-            return ResultOfAMove(self, [], False)
+    def make_a_move(self, player_id: int, move: GameMove) -> ResultOfAMove:
+        if move.pass_turn:
+            # player pass turn. May not be valid if there are moves for him
+            valid = True
+            if player_id == PLAYER_1 and len(self.possible_moves_player_1) > 0:
+                valid = False
+            if player_id == PLAYER_2 and len(self.possible_moves_player_2) > 0:
+                valid = False
+            if valid:  # valid to pass
+                self.current_player = self.get_opponent_of(player_id)
+                self.update_status()
+                return ResultOfAMove(new_game_board=self,
+                                     game_ended=self.game_ended,
+                                     the_move=move,
+                                     is_move_valid=True,
+                                     flipped_spots=[])
 
-        # is it going to cause at lease one piece to flip?
-        flipping_spots = self.get_flipping_spots(player_id, spot)
-        if len(flipping_spots) > 0:
-            # valid move, excute
-            new_game = self._flip(flipping_spots)
-            new_game.board[spot.row][spot.col] = player_id
+            else:  # not valid to do pass
+                return ResultOfAMove(new_game_board=self,
+                                     game_ended=self.game_ended,
+                                     the_move=move,
+                                     is_move_valid=False,
+                                     flipped_spots=[])
 
-            # update board status
-            new_game.update_status()
+        else:  # Placing a piece
+            spot = move.spot
+            if self.get_spot_state(spot) != 0:
+                # invalid move. No need to do self.update_status()
+                return ResultOfAMove(new_game_board=self,
+                                     game_ended=self.game_ended,
+                                     the_move=move,
+                                     is_move_valid=False,
+                                     flipped_spots=[])
 
-            return ResultOfAMove(new_game, flipping_spots, True)
-        else:
-            return ResultOfAMove(self, [], False)
+            # is it going to cause at lease one piece to flip?
+            flipping_spots = self.get_flipping_spots(player_id, spot)
+            if len(flipping_spots) > 0:  # valid move, excute
+                new_game = self._flip(flipping_spots)
+                new_game.board[spot.row][spot.col] = player_id
+
+                # update board status
+                new_game.update_status()
+
+                return ResultOfAMove(new_game_board=new_game,
+                                     game_ended=new_game.game_ended,
+                                     the_move=move,
+                                     is_move_valid=True,
+                                     flipped_spots=flipping_spots)
+            else:  # no flipping pieces, invalid move
+                return ResultOfAMove(new_game_board=self,
+                                     game_ended=self.game_ended,
+                                     the_move=move,
+                                     is_move_valid=False,
+                                     flipped_spots=[])

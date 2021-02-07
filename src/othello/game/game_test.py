@@ -171,8 +171,8 @@ class TestGame(unittest.TestCase):
 
     def test_play_a_piece(self):
         the_game = GameBoard.GameBoard()
-        result = the_game.get_new_board_for_a_move(
-            GameBoard.PLAYER_1, GameBoard.Spot(3, 5))
+        result = the_game.make_a_move(
+            GameBoard.PLAYER_1, GameBoard.GameMove(GameBoard.Spot(3, 5)))
         self.assertTrue(result.is_move_valid)
         self.assertEqual(result.flipped_spots, [GameBoard.Spot(3, 4)])
 

@@ -24,18 +24,18 @@ class GameWrapper:
         self.game_ended = False
         self.is_log_play = False
         return self.observe(GameBoard.PLAYER_1)
-    
+
     def get_action_size(self) -> int:
         return self.board_size * self.board_size + 1
 
-    def get_vision_shape(self)-> VisionShape:
+    def get_vision_shape(self) -> VisionShape:
         return VisionShape(self.board_size, self.board_size, 1)
 
     def observe(self, as_player_id) -> np.ndarray:
         # return np.ndarray of (8*8,) 64 1d array.
         # 0, is empty; 1 - is the player's piece; -1 - is opponent.
         obs_2d = np.asarray(self.game_board.observe_board_2d())
-        obs_2d_1_color = obs_2d[None,:]
+        obs_2d_1_color = obs_2d[None, :]
         # if as player1, 1 x 1, no impact
         # if as player2, 1 x -1, flips all the pieces, so the 1 is my color
         return obs_2d_1_color * as_player_id
@@ -62,8 +62,8 @@ class GameWrapper:
         if action < self.PASS_TURN_ACTION:
             # execute a move, place a piece
             spot = self.convert_action_to_spot(action)
-            move_result = self.game_board.get_new_board_for_a_move(
-                self.current_player, spot)
+            move_result = self.game_board.make_a_move(
+                self.current_player, GameBoard.GameMove(spot))
             self.game_board = move_result.new_game_board
             game_ended = self.game_board.game_ended
 

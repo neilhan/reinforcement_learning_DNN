@@ -62,8 +62,8 @@ class GameWrapper:
         if action < self.PASS_TURN_ACTION:
             # execute a move, place a piece
             spot = self.convert_action_to_spot(action)
-            move_result = self.game_board.get_new_board_for_a_move(
-                self.current_player, spot)
+            move_result = self.game_board.make_a_move(
+                self.current_player, GameBoard.GameMove(spot))
             self.game_board = move_result.new_game_board
             game_ended = self.game_board.game_ended
 

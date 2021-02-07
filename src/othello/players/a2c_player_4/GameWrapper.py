@@ -22,7 +22,7 @@ class GameWrapper:
         game_reset_random = game_reset_random and random.choice([True, False, False])
         # returns the observation of the board in one-d array. shape: (8*8,) float32
         self.game_board = GameBoard.GameBoard(self.board_size,
-                                              game_reset_random=game_reset_random)
+                                              random_start=game_reset_random)
         self.current_player = GameBoard.PLAYER_1
         self.game_ended = False
         self.is_log_play = False
@@ -68,8 +68,8 @@ class GameWrapper:
             spot = self.convert_action_to_spot(action)
             if self.is_log_play:
                 self.log_move(spot, self)  # --------
-            move_result = self.game_board.get_new_board_for_a_move(
-                self.current_player, spot)
+            move_result = self.game_board.make_a_move(
+                self.current_player, GameBoard.GameMove(spot))
             self.game_board = move_result.new_game_board
             game_ended = self.game_board.game_ended
 
