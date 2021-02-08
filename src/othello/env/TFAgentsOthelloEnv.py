@@ -11,8 +11,18 @@ from tf_agents.trajectories import time_step as ts
 from othello.game.GameBoard import GameBoard, GameMove, ResultOfAMove, PLAYER_1, PLAYER_2
 
 
+def load_policy(policy_dir):
+    try:
+        saved_policy = tf.compat.v2.saved_model.load(policy_dir)
+        return saved_policy
+    except:
+        print('load policy failed', policy_dir)
+    return None
+
+
 class OthelloEnv(py_environment.PyEnvironment):
-    def __init__(self, board_size=8, random_start=True):
+    # existing_agent_policy_path=None):
+    def __init__(self, board_size=8, random_start=True, agent=None):
         self._agent = None  # will need to set after Agent created
         self._game: GameBoard = GameBoard(board_size=board_size,
                                           random_start=random_start)
@@ -48,6 +58,7 @@ class OthelloEnv(py_environment.PyEnvironment):
         # flip the -1 or 1 for the spot pieces
         obs = obs * player_id
         # obs = obs/3.0 + 0.5 # todo try without / 3 + 0.5
+        obs = tf.convert_to_tensor(obs, dtype=tf.float32, name='observation')
         return obs
 
     def _reset(self) -> ts:
@@ -169,10 +180,26 @@ class OthelloEnv(py_environment.PyEnvironment):
         else:  # otherwise, player_2, play a move.
             # prepare a time_step for player_2.
             # x 1 or x -1, so the observation will be: 1 for my piece, -1 as opponent's
+            # opponent_ts = self.current_time_step()
+            # --
+            # step_type = tf.convert_to_tensor(
+            #     [0], dtype=tf.int32, name='step_type')
+            # reward = tf.convert_to_tensor([ts.StepType.MID], dtype=tf.float32, name='reward')
+            # discount = tf.convert_to_tensor(
+            #     [1.0], dtype=tf.float32, name='discount')
+            # # tf.convert_to_tensor( [state], dtype=tf.float32, name='observations')
+            # observation = self._get_observation(opponent_player_id)[None, :]
+            # opponent_ts = ts.TimeStep(
+            #     step_type, reward, discount, observation)
             opponent_ts = \
                 ts.transition(self._get_observation(opponent_player_id)[None, :],
                               reward=1,  # no use.
                               discount=1.0)
+            # opponent_ts = ts.TimeStep(opponent_ts.step_type,
+            #                           opponent_ts.reward,
+            #                           opponent_ts.discount,
+            #                           opponent_ts.observation * self._player_id)
+
             if opponent_player_id == PLAYER_1:
                 valid_spots = self._game.possible_moves_player_1
             else:
@@ -208,10 +235,10 @@ class OthelloEnv(py_environment.PyEnvironment):
         return opponent_result
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(levelname)s:%(message)s',
-                        # level=logging.DEBUG)
-                        level=logging.INFO)
+# if __name__ == '__main__':
+#     logging.basicConfig(format='%(levelname)s:%(message)s',
+#                         # level=logging.DEBUG)
+#                         level=logging.INFO)
 
-    env = OthelloEnv()
-    utils.validate_py_environment(env, episodes=5)
+#     env = OthelloEnv()
+#     utils.validate_py_environment(env, episodes=5)

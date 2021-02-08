@@ -4,11 +4,13 @@
 import logging
 import tensorflow as tf
 
+import tf_agents
 from tf_agents.networks import q_network, categorical_q_network
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.agents.categorical_dqn import categorical_dqn_agent
 from tf_agents.drivers import dynamic_step_driver
 from tf_agents.environments import tf_py_environment
+from tf_agents.environments.parallel_py_environment import ParallelPyEnvironment
 from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
 from tf_agents.policies import random_tf_policy, policy_saver, py_tf_eager_policy
@@ -17,18 +19,25 @@ from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
 from othello.env.TFAgentsOthelloEnv import OthelloEnv
-from othello.players.tfagents_dqn.CustomNN import CustomNN
+from othello.players.tfagents_dqn.CustomNN import CustomNN8x8
 
 
 tf.compat.v1.enable_v2_behavior()
 
 
 def create_envs(board_size=8, random_start: bool = False):
+    def _create_train_env():
+        return OthelloEnv(board_size=board_size,
+                          random_start=random_start,)
+        #   existing_agent_policy_path=old_policy_path)
     # Environment
     train_py_env = OthelloEnv(board_size=board_size, random_start=random_start)
     eval_py_env = OthelloEnv(board_size=board_size, random_start=random_start)
 
     train_env = tf_py_environment.TFPyEnvironment(train_py_env)
+    # tf_py_environment.TFPyEnvironment(
+    #     ParallelPyEnvironment(
+    #         env_constructors=[lambda: _create_train_env() for _ in range(8)]))
     eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
     return train_env, eval_env, train_py_env, eval_py_env
 
@@ -41,37 +50,11 @@ def update_envs_with_agent(train_py_env, eval_py_env, agent):
 
 def create_agent(train_env, global_step_counter):
     # q network
-    # categorical_q_net = \
-    #     categorical_q_network.CategoricalQNetwork(train_env.observation_spec(),
-    #                                               train_env.action_spec(),
-    #                                               num_atoms=num_atoms,
-    #                                               conv_layer_params=conv_layer_params,
-    #                                               fc_layer_params=fc_layer_params)
-
-    # q_net = q_network.QNetwork(train_env.observation_spec(),
-    #                            train_env.action_spec(),
-    #                            #    conv_layer_params=conv_layer_params,
-    #                            fc_layer_params=fc_layer_params)
-
-    q_net = CustomNN(train_env.observation_spec(),
-                     train_env.action_spec())
+    q_net = CustomNN8x8(train_env.observation_spec(),
+                        train_env.action_spec())
 
     # optimizer
     optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=learning_rate)
-
-    # Agent
-    # train_step_counter = tf.compat.v2.Variable(0)
-
-    # agent = categorical_dqn_agent.CategoricalDqnAgent(train_env.time_step_spec(),
-    #                                train_env.action_spec(),
-    #                                categorical_q_network=categorical_q_net,
-    #                                optimizer=optimizer,
-    #                                min_q_value=min_q_value,
-    #                                max_q_value=max_q_value,
-    #                                n_step_update=n_step_update,
-    #                                td_errors_loss_fn=common.element_wise_squared_loss,
-    #                                gamma=gamma,
-    #                                train_step_counter=train_step_counter)
 
     agent = dqn_agent.DqnAgent(train_env.time_step_spec(),
                                train_env.action_spec(),
@@ -201,24 +184,35 @@ def train_agent_and_save(board_size=8, random_start=True):
     train_checkpointer.initialize_or_restore()
     # Setup work is done new. ////////
 
-    # training ------------------------
-    _train_agent(num_iterations, agent, train_env,
-                 eval_env, replay_buffer_itr, replay_buffer)
+    for i in range(50):
+        print('*****************************')
+        # training ------------------------
+        _train_agent(num_iterations, agent, train_env,
+                     eval_env, replay_buffer_itr, replay_buffer)
+        print('============{0}=============='.format(i))
 
-    # Save agent checkpointe ------------------------
-    # save checkpoint
-    train_checkpointer.save(global_step_counter)
+        # Save agent checkpointe ------------------------
+        # save checkpoint
+        train_checkpointer.save(global_step_counter)
 
-    # save policy
-    tf_policy_saver = policy_saver.PolicySaver(agent.policy)
-    tf_policy_saver.save(policy_dir)
+        # save policy
+        tf_policy_saver = policy_saver.PolicySaver(agent.policy)
+        tf_policy_saver.save(policy_dir)
+
+        # demo -----------
+        demo_game_play(agent.policy, eval_env, eval_py_env)
+        print('============{0}=============='.format(i))
 
     return agent, eval_env, eval_py_env
 
 
 def load_policy(policy_dir):
-    saved_policy = tf.compat.v2.saved_model.load(policy_dir)
-    return saved_policy
+    try:
+        saved_policy = tf.compat.v2.saved_model.load(policy_dir)
+        return saved_policy
+    except:
+        print('load policy failed', policy_dir)
+    return None
 
 
 def demo_game_play(agent_policy, eval_env, eval_py_env):
@@ -242,8 +236,8 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
 
 
 # ------------------------------------------------------------
-checkpoint_dir = './__tf_agents__/othello_dqn_lr_e3/checkpoint'
-policy_dir = './__tf_agents__/othello_dqn_lr_e3/policy'
+checkpoint_dir = './__tf_agents__/othello_8x8_dqn_lr_e4/checkpoint'
+policy_dir = './__tf_agents__/othello_8x8_dqn_lr_e4/policy'
 
 # num_iterations = 105_000  # @param {type:"integer"}
 num_iterations = 5_000  # @param {type:"integer"}
@@ -256,7 +250,7 @@ replay_buffer_capacity = 100000  # @param {type:"integer"}
 # fc_layer_params = (128, 64,)
 
 batch_size = 64  # @param {type:"integer"}
-learning_rate = 1e-3  # @param {type:"number"}
+learning_rate = 1e-4  # @param {type:"number"}
 gamma = 0.99
 log_interval = 200  # @param {type:"integer"}
 
@@ -270,11 +264,8 @@ eval_interval = 1000  # @param {type:"integer"}
 
 
 def train_main(board_size=8, random_start=True):
-    for i in range(50):
-        agent, eval_env, eval_py_env = train_agent_and_save(board_size=board_size,
-                                                            random_start=random_start)
-        demo_game_play(agent.policy, eval_env, eval_py_env)
-        print(f'============{i}==============')
+    agent, eval_env, eval_py_env = train_agent_and_save(board_size=board_size,
+                                                        random_start=random_start)
 
 
 def demo_main(board_size=8, random_start=False):
@@ -285,5 +276,6 @@ def demo_main(board_size=8, random_start=False):
 
 
 if __name__ == '__main__':
-    train_main(board_size=6, random_start=False)
+    # tf_agents.system.multiprocessing.handle_main(main)
+    train_main(board_size=8, random_start=False)
     # demo_main(board_size=8, random_start=False)
