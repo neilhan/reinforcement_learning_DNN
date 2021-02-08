@@ -101,17 +101,25 @@ class OthelloEnv(py_environment.PyEnvironment):
             print(
                 f'Player {self._player_id}, move: {move.to_friendly_format()}')
             print(self._game)
-            print('----------')
+            print('----')
 
         self._episode_ended = move_result.game_ended
 
         return_ts = None
         # invalid move end game, -500
         if not move_result.is_move_valid:
+            if self._log_on:  # logging ---------------------------
+                print(
+                    f'Player {self._player_id}, move: {move.to_friendly_format()} is invalid. Game End.')
+                print('----------^^^^******^^^^------------')
             return_ts = self._build_ts_invalid_move(move_result)
         else:  # valid move
             if move_result.game_ended:
                 return_ts = self._build_ts_game_ended(move_result)
+                if self._log_on:  # logging ---------------------------
+                    print(
+                        f'Player {self._player_id}, move: {move.to_friendly_format()} valid. Game End.')
+                    print('----------^^^^******^^^^------------')
             else:  # game not end
                 if move_result.is_move_valid:
                     return_ts = self._build_ts_opponent_turn(move_result)

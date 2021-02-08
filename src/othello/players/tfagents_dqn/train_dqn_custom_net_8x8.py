@@ -220,7 +220,7 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
                         level=logging.INFO)
-    num_episodes = 5
+    num_episodes = 3
     for _ in range(num_episodes):
         time_step = eval_env.reset()
         eval_py_env._log_on = True
@@ -276,6 +276,9 @@ def demo_main(board_size=8, random_start=False):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(levelname)s:%(message)s',
+                        # level=logging.DEBUG)
+                        level=logging.INFO)
     # tf_agents.system.multiprocessing.handle_main(main)
     train_main(board_size=8, random_start=False)
     # demo_main(board_size=8, random_start=False)
