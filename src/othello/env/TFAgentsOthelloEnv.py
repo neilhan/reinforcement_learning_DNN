@@ -22,15 +22,15 @@ def load_policy(policy_dir):
 
 class OthelloEnv(py_environment.PyEnvironment):
     # existing_agent_policy_path=None):
-    def __init__(self, board_size=8, random_start=True, agent=None):
+    def __init__(self, board_size=8, random_rate=0.0, agent=None):
         self._agent = None  # will need to set after Agent created
         self._game: GameBoard = GameBoard(board_size=board_size,
-                                          random_start=random_start)
+                                          random_start=random.random() < random_rate)
         self._episode_ended = self._game.game_ended
         self._player_id = PLAYER_1
         self._log_on = False
         self._exploring_opponent = True
-        self._random_start = random_start
+        self._random_rate = random_rate
 
         self._action_spec = array_spec.BoundedArraySpec(shape=(),
                                                         dtype=np.int32,
@@ -63,10 +63,10 @@ class OthelloEnv(py_environment.PyEnvironment):
 
     def _reset(self) -> ts:
         self._game.reset(random_reset=(
-            self._random_start and bool(random.getrandbits(1))))
+            random.random() < self._random_rate))
         self._episode_ended = False
         # random player_id
-        if self._random_start and bool(random.getrandbits(1)):
+        if random.random() < self._random_rate:
             self._player_id = PLAYER_2
             # opponent move...
             opponent_result = self._opponent_take_turn()

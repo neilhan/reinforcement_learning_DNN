@@ -25,14 +25,14 @@ from othello.players.tfagents_dqn.CustomNN import CustomNN8x8
 tf.compat.v1.enable_v2_behavior()
 
 
-def create_envs(board_size=8, random_start: bool = False):
+def create_envs(board_size=8, random_rate: float = 0.0):
     def _create_train_env():
         return OthelloEnv(board_size=board_size,
-                          random_start=random_start,)
+                          random_rate=random_rate,)
         #   existing_agent_policy_path=old_policy_path)
     # Environment
-    train_py_env = OthelloEnv(board_size=board_size, random_start=random_start)
-    eval_py_env = OthelloEnv(board_size=board_size, random_start=random_start)
+    train_py_env = OthelloEnv(board_size=board_size, random_rate=random_rate)
+    eval_py_env = OthelloEnv(board_size=board_size, random_rate=random_rate)
 
     train_env = tf_py_environment.TFPyEnvironment(train_py_env)
     # tf_py_environment.TFPyEnvironment(
@@ -157,12 +157,12 @@ def _train_agent(num_iterations, agent, train_env, eval_env, replay_buffer_itr, 
             returns.append(avg_return)
 
 
-def train_agent_and_save(board_size=8, random_start=True):
+def train_agent_and_save(board_size=8, random_rate=0.0):
     """Load training checkpoint, then do training. Save at the end. """
     global_step_counter = tf.compat.v1.train.get_or_create_global_step()
 
     train_env, eval_env, train_py_env, eval_py_env = create_envs(
-        board_size, random_start)
+        board_size, random_rate)
     agent = create_agent(train_env, global_step_counter)
     update_envs_with_agent(train_py_env, eval_py_env, agent)
 
@@ -184,7 +184,7 @@ def train_agent_and_save(board_size=8, random_start=True):
     train_checkpointer.initialize_or_restore()
     # Setup work is done new. ////////
 
-    for i in range(50):
+    for i in range(500):
         print('*****************************')
         # training ------------------------
         _train_agent(num_iterations, agent, train_env,
@@ -225,7 +225,7 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
         time_step = eval_env.reset()
         eval_py_env._log_on = True
         eval_py_env._exploring_opponent = False
-        eval_py_env._random_start = True
+        eval_py_env._random_rate = 0.5
 
         while not time_step.is_last():
             action_step = agent_policy.action(time_step)
@@ -263,15 +263,15 @@ num_eval_episodes = 10  # @param {type:"integer"}
 eval_interval = 1000  # @param {type:"integer"}
 
 
-def train_main(board_size=8, random_start=True):
+def train_main(board_size=8, random_rate=0.0):
     agent, eval_env, eval_py_env = train_agent_and_save(board_size=board_size,
-                                                        random_start=random_start)
+                                                        random_rate=random_rate)
 
 
-def demo_main(board_size=8, random_start=False):
+def demo_main(board_size=8, random_rate=0.0):
     policy = load_policy(policy_dir)
     train_env, eval_env, train_py_env, eval_py_env = create_envs(
-        board_size=board_size, random_start=random_start)
+        board_size=board_size, random_rate=random_rate)
     demo_game_play(policy, eval_env, eval_py_env)
 
 
@@ -280,5 +280,5 @@ if __name__ == '__main__':
                         # level=logging.DEBUG)
                         level=logging.INFO)
     # tf_agents.system.multiprocessing.handle_main(main)
-    train_main(board_size=8, random_start=False)
+    train_main(board_size=8, random_rate=1.0)
     # demo_main(board_size=8, random_start=False)
