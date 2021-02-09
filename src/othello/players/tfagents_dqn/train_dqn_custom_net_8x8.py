@@ -280,5 +280,5 @@ if __name__ == '__main__':
                         # level=logging.DEBUG)
                         level=logging.INFO)
     # tf_agents.system.multiprocessing.handle_main(main)
-    train_main(board_size=8, random_rate=1.0)
+    train_main(board_size=8, random_rate=0.5)
     # demo_main(board_size=8, random_start=False)

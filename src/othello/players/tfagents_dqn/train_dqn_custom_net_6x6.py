@@ -183,7 +183,7 @@ def train_agent_and_save(board_size=8, random_rate=0.0):
     train_checkpointer.initialize_or_restore()
     # Setup work is done new. ////////
 
-    for i in range(50):
+    for i in range(500):
         # training ------------------------
         _train_agent(num_iterations, agent, train_env,
                      eval_env, replay_buffer_itr, replay_buffer)
@@ -233,8 +233,8 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
 
 
 # ------------------------------------------------------------
-checkpoint_dir = './__tf_agents__/othello_dqn_lr_e3/checkpoint'
-policy_dir = './__tf_agents__/othello_dqn_lr_e3/policy'
+checkpoint_dir = './__tf_agents__/othello_6x6_dqn_lr_e3/checkpoint'
+policy_dir = './__tf_agents__/othello_6x6_dqn_lr_e3/policy'
 
 # num_iterations = 105_000  # @param {type:"integer"}
 num_iterations = 5_000  # @param {type:"integer"}

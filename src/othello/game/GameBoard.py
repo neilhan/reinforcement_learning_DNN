@@ -172,7 +172,6 @@ class GameBoard:
     def reset(self, random_reset):
         self.board = [[0.0]*self.board_size for _ in range(self.board_size)]
         board_size = self.board_size
-        self.current_player = PLAYER_1
         self.game_ended = False
         self.winner = 0
         self.player_1_count = 0
@@ -186,7 +185,6 @@ class GameBoard:
                 for c in range(self.board_size):
                     self.board[r][c] = random.choice(
                         [PLAYER_1, 0, 0, PLAYER_2])
-            # self.current_player = random.choice([PLAYER_1, PLAYER_2])
 
         self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_1
         self.board[int(board_size/2)][int(board_size/2)] = PLAYER_1
@@ -212,7 +210,6 @@ class GameBoard:
     def deepcopy(self):
         new_game = GameBoard(self.board_size)
         new_game.board = copy.deepcopy(self.board)
-        new_game.current_player = self.current_player
         new_game.game_ended = self.game_ended
         new_game.winner = self.winner
         new_game.player_1_count = self.player_1_count
@@ -293,7 +290,7 @@ class GameBoard:
         if len(valid_moves) > 0:
             return opponent_id
         else:
-            return player_id  # opponent has no moves, so current_player continue
+            return player_id  # opponent has no moves, so current player continue
 
     # return new Game.
     def _flip(self, flipping_spots):
@@ -382,7 +379,6 @@ class GameBoard:
             if player_id == PLAYER_2 and len(self.possible_moves_player_2) > 0:
                 valid = False
             if valid:  # valid to pass
-                self.current_player = self.get_opponent_of(player_id)
                 self.update_status()
                 return ResultOfAMove(new_game_board=self,
                                      game_ended=self.game_ended,

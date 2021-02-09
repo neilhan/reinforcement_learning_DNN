@@ -136,7 +136,7 @@ class TicTacToeEnv(py_environment.PyEnvironment):
             or (self._exploring_opponent
                 and bool(random.choice([True, False, False, False])))):
             if self._log_on:
-                print('******* Opponent randome exploring.')
+                print('******* Opponent random exploring.')
             opponent_move = random.choice(self._game.get_valid_spots())
         else:
             action_step = self._agent.policy.action(opponent_ts)
@@ -145,7 +145,7 @@ class TicTacToeEnv(py_environment.PyEnvironment):
                 opponent_move, board_size=self._game.board_size)
             if not opponent_move in self._game.get_valid_spots():
                 if self._log_on:
-                    print('******* policy failed. randome logic ******* ')
+                    print('******* policy failed. random logic ******* ')
                 opponent_move = random.choice(
                     self._game.get_valid_spots())
         opponent_result = self._game.play_a_piece(opponent_player_id,

@@ -101,7 +101,7 @@ class OthelloEnv(py_environment.PyEnvironment):
             print(
                 f'Player {self._player_id}, move: {move.to_friendly_format()}')
             print(self._game)
-            print('----')
+            print('--------')
 
         self._episode_ended = move_result.game_ended
 
@@ -111,7 +111,7 @@ class OthelloEnv(py_environment.PyEnvironment):
             if self._log_on:  # logging ---------------------------
                 print(
                     f'Player {self._player_id}, move: {move.to_friendly_format()} is invalid. Game End.')
-                print('----------^^^^******^^^^------------')
+                print('^^^^^^^^^^^^^^^^^******^^^^^^^^^^^^^^^^^^^')
             return_ts = self._build_ts_invalid_move(move_result)
         else:  # valid move
             if move_result.game_ended:
@@ -119,7 +119,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                 if self._log_on:  # logging ---------------------------
                     print(
                         f'Player {self._player_id}, move: {move.to_friendly_format()} valid. Game End.')
-                    print('----------^^^^******^^^^------------')
+                    print('^^^^^^^^^^^^^^^^^******^^^^^^^^^^^^^^^^^^^')
             else:  # game not end
                 if move_result.is_move_valid:
                     return_ts = self._build_ts_opponent_turn(move_result)
@@ -217,7 +217,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                 or (self._exploring_opponent
                     and bool(random.choice([True, False, False, False])))):
                 if self._log_on:
-                    print('******* Opponent randome exploring.')
+                    print('******* Opponent random exploring.')
                 opponent_move = GameMove(random.choice(valid_spots))
             else:
                 # Let agent pick a move
@@ -227,7 +227,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                     opponent_action_code, board_size=self._game.board_size)
                 if not opponent_move.pass_turn and not opponent_move.spot in valid_spots:
                     if self._log_on:
-                        print('******* policy failed. randome logic ******* ')
+                        print('******* policy failed. random logic ******* ', opponent_move.to_friendly_format())
                     opponent_move = GameMove(random.choice(valid_spots))
         # opponent move...
         opponent_result = self._game.make_a_move(opponent_player_id,
