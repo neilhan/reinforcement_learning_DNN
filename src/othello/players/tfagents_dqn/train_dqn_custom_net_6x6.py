@@ -19,7 +19,7 @@ from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
 from othello.env.TFAgentsOthelloEnv import OthelloEnv
-from othello.players.tfagents_dqn.CustomNN import CustomNN
+from othello.players.tfagents_dqn.CustomNN import CustomNN6x6 as CustomNN
 
 
 tf.compat.v1.enable_v2_behavior()

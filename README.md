@@ -60,12 +60,26 @@ pip3 install --ignore-installed PyYAML
 
 python -m unittest discover -s project_directory -p "*_test.py"
 
-# run tf_agents player services, so that can train with multiple Othello Envs
+# current dir ./src
+cd src
+
+# 1. run tf_agents player services, so that can train with multiple Othello Envs
 python -m othello.service.tfagent_service
+
+# 2. start 8x8 training for tf_agents DQN
+python -m othello.players.tfagents_dqn.train-dqn_custom_net_6x6
+python -m othello.players.tfagents_dqn.train-dqn_custom_net_8x8
+
 ```
 
 # othello
-20210113
+20210113 started
+- learning rate matters. 
+- shortcut network helps agent to start learning. 
+- wide network, deep network get into local optimal and trapped in local optimal easily.
+- start simple, debug env, network, agent, then can train one, then parallel train.
+- tf_agents is a good tool to work with RL
+20210209 8 parallel env training with tf_agents.
 
 # notes
 ``` 
