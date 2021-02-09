@@ -9,6 +9,7 @@ from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
 from othello.game.GameBoard import GameBoard, GameMove, ResultOfAMove, PLAYER_1, PLAYER_2
+from othello.service import tfagent_client as agent_client
 
 
 def load_policy(policy_dir):
@@ -22,8 +23,9 @@ def load_policy(policy_dir):
 
 class OthelloEnv(py_environment.PyEnvironment):
     # existing_agent_policy_path=None):
-    def __init__(self, board_size=8, random_rate=0.0, agent=None):
+    def __init__(self, board_size=8, random_rate=0.0, agent=None, use_agent_service=False):
         self._agent = None  # will need to set after Agent created
+        self._use_agent_service = use_agent_service
         self._game: GameBoard = GameBoard(board_size=board_size,
                                           random_start=random.random() < random_rate)
         self._episode_ended = self._game.game_ended
@@ -213,7 +215,7 @@ class OthelloEnv(py_environment.PyEnvironment):
             else:
                 valid_spots = self._game.possible_moves_player_2
 
-            if (self._agent == None
+            if ((self._agent == None and not self._use_agent_service)
                 or (self._exploring_opponent
                     and bool(random.choice([True, False, False, False])))):
                 if self._log_on:
@@ -221,13 +223,21 @@ class OthelloEnv(py_environment.PyEnvironment):
                 opponent_move = GameMove(random.choice(valid_spots))
             else:
                 # Let agent pick a move
-                action_step = self._agent.policy.action(opponent_ts)
-                opponent_action_code = action_step.action.numpy().item()
+                if self._use_agent_service:
+                    opponent_action_code = \
+                        agent_client.agent_service_step(game_board=self._game.observe_board_2d(),
+                                                        server_player_id=opponent_player_id,
+                                                        client_player_id=self._player_id,
+                                                        board_size=self._game.board_size)
+                else:
+                    action_step = self._agent.policy.action(opponent_ts)
+                    opponent_action_code = action_step.action.numpy().item()
                 opponent_move = GameMove.from_action_code(
                     opponent_action_code, board_size=self._game.board_size)
                 if not opponent_move.pass_turn and not opponent_move.spot in valid_spots:
                     if self._log_on:
-                        print('******* policy failed. random logic ******* ', opponent_move.to_friendly_format())
+                        print('******* policy failed. random logic ******* ',
+                              opponent_move.to_friendly_format())
                     opponent_move = GameMove(random.choice(valid_spots))
         # opponent move...
         opponent_result = self._game.make_a_move(opponent_player_id,
