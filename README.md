@@ -59,6 +59,9 @@ pip freeze > requirements.txt
 pip3 install --ignore-installed PyYAML
 
 python -m unittest discover -s project_directory -p "*_test.py"
+
+# run tf_agents player services, so that can train with multiple Othello Envs
+python -m othello.service.afagent_service
 ```
 
 # othello

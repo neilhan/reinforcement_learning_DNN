@@ -233,8 +233,8 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
 
 
 # ------------------------------------------------------------
-checkpoint_dir = './__tf_agents__/othello_6x6_dqn_lr_e3/checkpoint'
-policy_dir = './__tf_agents__/othello_6x6_dqn_lr_e3/policy'
+checkpoint_dir = './__tf_agents__/othello_6x6_dqn_lr_e4/checkpoint'
+policy_dir = './__tf_agents__/othello_6x6_dqn_lr_e4/policy'
 
 # num_iterations = 105_000  # @param {type:"integer"}
 num_iterations = 5_000  # @param {type:"integer"}
@@ -275,7 +275,7 @@ def demo_main(board_size=8, random_rate=0.0):
 def main(args):
     print('main() args:', args)
     train_main(board_size=6, random_rate=0.5)
-    # demo_main(board_size=6, random_rate=False)
+    # demo_main(board_size=6, random_rate=0.0)
 
 
 if __name__ == '__main__':
