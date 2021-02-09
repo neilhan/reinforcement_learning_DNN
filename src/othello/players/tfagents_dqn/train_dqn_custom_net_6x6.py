@@ -25,19 +25,25 @@ from othello.players.tfagents_dqn.CustomNN import CustomNN
 tf.compat.v1.enable_v2_behavior()
 
 
-def create_envs(board_size=8, random_rate: float = 0.0):
+def create_envs(board_size=8, random_rate: float = 0.0, use_agent_service=False):
     def _create_train_env():
         return OthelloEnv(board_size=board_size,
-                          random_rate=random_rate,)
-                        #   existing_agent_policy_path=old_policy_path)
+                          random_rate=random_rate,
+                          use_agent_service=use_agent_service)
+        #   existing_agent_policy_path=old_policy_path)
     # Environment
-    train_py_env = OthelloEnv(board_size=board_size, random_rate=random_rate)
-    eval_py_env = OthelloEnv(board_size=board_size, random_rate=random_rate)
+    train_py_env = OthelloEnv(board_size=board_size,
+                              random_rate=random_rate,
+                              use_agent_service=use_agent_service)
+    eval_py_env = OthelloEnv(board_size=board_size,
+                             random_rate=random_rate,
+                             use_agent_service=use_agent_service)
 
-    train_env = tf_py_environment.TFPyEnvironment(train_py_env)
-    # tf_py_environment.TFPyEnvironment(
-    #     ParallelPyEnvironment(
-    #         env_constructors=[lambda: _create_train_env() for _ in range(8)]))
+    # train_env = tf_py_environment.TFPyEnvironment(train_py_env)
+    train_env = \
+        tf_py_environment.TFPyEnvironment(
+            ParallelPyEnvironment(
+                env_constructors=[lambda: _create_train_env() for _ in range(8)]))
     eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
     return train_env, eval_env, train_py_env, eval_py_env
 
@@ -160,10 +166,11 @@ def train_agent_and_save(board_size=8, random_rate=0.0):
     """Load training checkpoint, then do training. Save at the end. """
     global_step_counter = tf.compat.v1.train.get_or_create_global_step()
 
-    train_env, eval_env, train_py_env, eval_py_env = create_envs(
-        board_size, random_rate)
+    train_env, eval_env, train_py_env, eval_py_env = create_envs(board_size,
+                                                                 random_rate,
+                                                                 use_agent_service=True)
     agent = create_agent(train_env, global_step_counter)
-    update_envs_with_agent(train_py_env, eval_py_env, agent)
+    # update_envs_with_agent(train_py_env, eval_py_env, agent)
 
     replay_buffer, replay_buffer_itr = create_replay_buffer(train_env, agent)
 

@@ -23,7 +23,7 @@ class CustomNN8x8(network.Network):
         self._flat_x = tf.keras.layers.Flatten()
         self._cnn_1 = self._create_conv2d_layer(32, 2, 1)
         self._cnn_2 = self._create_conv2d_layer(32, 2, 1)
-        self._flat_cnn = tf.keras.layers.Flatten() 
+        self._flat_cnn = tf.keras.layers.Flatten()
         # will shortcut here
         self._dense_1 = self._create_dense_layer(512)
         self._dense_2 = self._create_dense_layer(256)
@@ -32,7 +32,7 @@ class CustomNN8x8(network.Network):
         initializer = tf.keras.initializers.RandomUniform(
             minval=-0.003, maxval=0.003)
         self._action_projection_layer = tf.keras.layers.Dense(action_spec.maximum + 1,
-                                                            #   activation=tf.keras.activations.tanh,
+                                                              #   activation=tf.keras.activations.tanh,
                                                               kernel_initializer=initializer,
                                                               name='action')
         # this is only doing one layer for test the Custom model.
@@ -72,7 +72,7 @@ class CustomNN8x8(network.Network):
         return tf.keras.layers.Dense(units=num_nodes, activation=act_fn)
 
 
-class CustomNN(network.Network):
+class CustomNN6x6(network.Network):
     def __init__(self,
                  observation_spec,
                  action_spec,
@@ -84,15 +84,16 @@ class CustomNN(network.Network):
 
         self._flat_x = tf.keras.layers.Flatten()
         self._cnn_1 = self._create_conv2d_layer(32, 2, 1)
-        self._flat_cnn = tf.keras.layers.Flatten() 
+        self._flat_cnn = tf.keras.layers.Flatten()
         # will shortcut here
-        self._dense_1 = self._create_dense_layer(128)
-        self._policy_dense_1 = self._create_dense_layer(64)
+        self._dense_1 = self._create_dense_layer(256)
+        self._dense_2 = self._create_dense_layer(128)
 
         initializer = tf.keras.initializers.RandomUniform(
             minval=-0.003, maxval=0.003)
         self._action_projection_layer = tf.keras.layers.Dense(action_spec.maximum + 1,
-                                                            #   activation=tf.keras.activations.tanh,
+                                                              activation=None,
+                                                              #   activation=tf.keras.activations.tanh,
                                                               kernel_initializer=initializer,
                                                               name='action')
         # this is only doing one layer for test the Custom model.
@@ -110,8 +111,9 @@ class CustomNN(network.Network):
         flat_cnn = self._flat_cnn(cnn)
         concat_cnn_x = tf.keras.layers.concatenate([flat_x, flat_cnn])
         dense_1 = self._dense_1(concat_cnn_x)
-        policy_dense_1 = self._policy_dense_1(dense_1)
-        actions = self._action_projection_layer(policy_dense_1)
+        dense_2 = self._dense_2(dense_1)
+        concat_dense_x = tf.keras.layers.concatenate([flat_x, dense_2])
+        actions = self._action_projection_layer(concat_dense_x)
 
         return tf.nest.pack_sequence_as(self._action_spec, [actions]), network_state
 
