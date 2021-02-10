@@ -112,7 +112,7 @@ class OthelloEnv(py_environment.PyEnvironment):
         if not move_result.is_move_valid:
             if self._log_on:  # logging ---------------------------
                 print(
-                    f'Player {self._player_id}, move: {move.to_friendly_format()} is invalid. Game End.')
+                    f'Player {self._player_id}, INVALID move: {move.to_friendly_format()}. Game Ends.')
                 print('^^^^^^^^^^^^^^^^^******^^^^^^^^^^^^^^^^^^^')
             return_ts = self._build_ts_invalid_move(move_result)
         else:  # valid move
@@ -120,7 +120,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                 return_ts = self._build_ts_game_ended(move_result)
                 if self._log_on:  # logging ---------------------------
                     print(
-                        f'Player {self._player_id}, move: {move.to_friendly_format()} valid. Game End.')
+                        f'Player {self._player_id}, move: {move.to_friendly_format()}. Game Ends.')
                     print('^^^^^^^^^^^^^^^^^******^^^^^^^^^^^^^^^^^^^')
             else:  # game not end
                 if move_result.is_move_valid:
