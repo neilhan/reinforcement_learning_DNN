@@ -257,7 +257,7 @@ replay_buffer_capacity = 100000  # @param {type:"integer"}
 
 batch_size = 64  # @param {type:"integer"}
 learning_rate = 1e-4  # @param {type:"number"}
-gamma = 0.99
+gamma = 0.98
 log_interval = 200  # @param {type:"integer"}
 
 num_atoms = 51  # @param {type:"integer"}

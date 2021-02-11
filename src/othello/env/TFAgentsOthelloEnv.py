@@ -153,13 +153,17 @@ class OthelloEnv(py_environment.PyEnvironment):
     def _build_ts_game_ended(self, move_result: ResultOfAMove):
         reward = 0  # default to tie
         if self._is_player_winning(self._player_id):
-            reward = 100 + abs(self._game.player_1_count -
-                               self._game.player_2_count) * 2
+            reward = 100 + (abs(self._game.player_1_count -
+                                self._game.player_2_count) * 100
+                            / (self._game.player_1_count -
+                               self._game.player_2_count))
         elif self._is_game_tie():
             reward = 0
         else:
-            reward = -100 - abs(self._game.player_1_count -
-                                self._game.player_2_count) * 2
+            reward = -100 - (abs(self._game.player_1_count -
+                                 self._game.player_2_count) * 100
+                             / (self._game.player_1_count -
+                                self._game.player_2_count))
 
         # return termination time_step
         return_ts = \

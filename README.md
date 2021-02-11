@@ -67,8 +67,8 @@ cd src
 python -m othello.service.tfagent_service
 
 # 2. start 8x8 training for tf_agents DQN
-python -m othello.players.tfagents_dqn.train-dqn_custom_net_6x6
-python -m othello.players.tfagents_dqn.train-dqn_custom_net_8x8
+python -m othello.players.tfagents_dqn.train_dqn_custom_net_6x6
+python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8
 
 ```
 

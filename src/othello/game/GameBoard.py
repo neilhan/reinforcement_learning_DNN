@@ -186,10 +186,10 @@ class GameBoard:
                     self.board[r][c] = random.choice(
                         [PLAYER_1, 0, 0, PLAYER_2])
 
-        self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_1
-        self.board[int(board_size/2)][int(board_size/2)] = PLAYER_1
-        self.board[int(board_size/2-1)][int(board_size/2)] = PLAYER_2
-        self.board[int(board_size/2)][int(board_size/2-1)] = PLAYER_2
+        self.board[int(board_size/2-1)][int(board_size/2-1)] = PLAYER_2
+        self.board[int(board_size/2)][int(board_size/2)] = PLAYER_2
+        self.board[int(board_size/2-1)][int(board_size/2)] = PLAYER_1
+        self.board[int(board_size/2)][int(board_size/2-1)] = PLAYER_1
 
         self.update_status()
 
@@ -227,9 +227,9 @@ class GameBoard:
             if cell == 0:
                 return '.'
             elif cell == PLAYER_1:
-                return 'O'
-            elif cell == PLAYER_2:
                 return 'X'
+            elif cell == PLAYER_2:
+                return 'O'
 
         return ' '.join(map(__to_view_string, the_row))
 
