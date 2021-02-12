@@ -379,7 +379,6 @@ class GameBoard:
             if player_id == PLAYER_2 and len(self.possible_moves_player_2) > 0:
                 valid = False
             if valid:  # valid to pass
-                self.update_status()
                 return ResultOfAMove(new_game_board=self,
                                      game_ended=self.game_ended,
                                      the_move=move,

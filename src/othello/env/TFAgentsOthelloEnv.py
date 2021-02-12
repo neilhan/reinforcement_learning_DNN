@@ -238,7 +238,8 @@ class OthelloEnv(py_environment.PyEnvironment):
                     opponent_action_code = action_step.action.numpy().item()
                 opponent_move = GameMove.from_action_code(
                     opponent_action_code, board_size=self._game.board_size)
-                if not opponent_move.pass_turn and not opponent_move.spot in valid_spots:
+                if ((opponent_move.pass_turn and len(valid_spots) > 0) or
+                        (not opponent_move.pass_turn and not opponent_move.spot in valid_spots)):
                     if self._log_on:
                         print('******* policy failed. random logic ******* ',
                               opponent_move.to_friendly_format())
