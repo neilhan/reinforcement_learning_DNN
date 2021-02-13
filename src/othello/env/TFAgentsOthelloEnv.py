@@ -68,7 +68,8 @@ class OthelloEnv(py_environment.PyEnvironment):
             random.random() < self._random_rate))
         self._episode_ended = False
         # random player_id
-        if random.random() < self._random_rate:
+        # if random.random() < self._random_rate:
+        if bool(random.getrandbits(1)):
             self._player_id = PLAYER_2
             # opponent move...
             opponent_result = self._opponent_take_turn()

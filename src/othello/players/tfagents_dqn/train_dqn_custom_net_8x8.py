@@ -206,7 +206,7 @@ def train_agent_and_save(board_size=8, random_rate=0.0):
         tf_policy_saver.save(policy_dir)
 
         # demo -----------
-        demo_game_play(agent.policy, eval_env, eval_py_env)
+        demo_game_play(agent.policy, eval_env, eval_py_env, random_rate=random_rate)
         print('============{0}=============='.format(i))
 
     return agent, eval_env, eval_py_env
@@ -221,7 +221,7 @@ def load_policy(policy_dir):
     return None
 
 
-def demo_game_play(agent_policy, eval_env, eval_py_env):
+def demo_game_play(agent_policy, eval_env, eval_py_env, random_rate=0.0):
     # log game play
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
@@ -231,7 +231,7 @@ def demo_game_play(agent_policy, eval_env, eval_py_env):
         time_step = eval_env.reset()
         eval_py_env._log_on = True
         eval_py_env._exploring_opponent = False
-        eval_py_env._random_rate = 0.5
+        eval_py_env._random_rate = random_rate
 
         while not time_step.is_last():
             action_step = agent_policy.action(time_step)
@@ -278,7 +278,7 @@ def demo_main(board_size=8, random_rate=0.0):
     policy = load_policy(policy_dir)
     train_env, eval_env, train_py_env, eval_py_env = create_envs(
         board_size=board_size, random_rate=random_rate)
-    demo_game_play(policy, eval_env, eval_py_env)
+    demo_game_play(policy, eval_env, eval_py_env, random_rate=random_rate)
 
 
 def main(*args, **kwargs):
