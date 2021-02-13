@@ -281,7 +281,7 @@ def demo_main(board_size=8, random_rate=0.0):
 
 def main(args):
     print('main() args:', args)
-    train_main(board_size=6, random_rate=0.5)
+    train_main(board_size=6, random_rate=0.0)
     # demo_main(board_size=6, random_rate=0.0)
 
 

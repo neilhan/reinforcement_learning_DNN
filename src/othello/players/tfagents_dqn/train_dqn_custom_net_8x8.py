@@ -285,7 +285,7 @@ def main(*args, **kwargs):
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
                         level=logging.INFO)
-    train_main(board_size=8, random_rate=0.5)
+    train_main(board_size=8, random_rate=0.0)
     # demo_main(board_size=8, random_start=False)
 
 
