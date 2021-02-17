@@ -43,8 +43,10 @@ sudo apt install python3-dev python3-pip python3-venv python3-wheel -y
 # opengl
 sudo apt install python-opengl
 
-# venv. For ubuntu, debian needs the without-pip
-python -m venv env --without-pip
+# venv. ubuntu needs the without-pip
+python -m venv env
+# python -m venv env --without-pip
+
 source env/bin/activate
 pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
@@ -86,4 +88,16 @@ python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8
 git@github.com:rmsander/marl_ppo.git
 docker run -it --gpus 1 tensorflow/tensorflow:latest-gpu-jupyter
 docker run -it --gpus all tensorflow/tensorflow:latest-gpu-jupyter
+```
+# Nix notes
+```
+nix-env -iA lorri
+nix-env -q
+lorri init
+nix-shell shell.nix
+```
+
+# Purescript notes
+```
+spago repl
 ```
