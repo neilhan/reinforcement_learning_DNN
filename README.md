@@ -72,8 +72,24 @@ python -m othello.service.tfagent_service
 python -m othello.players.tfagents_dqn.train_dqn_custom_net_6x6
 python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8
 
-```
+``` 
 
+# Nix notes
+```
+nix-env -iA lorri
+nix-env -q
+lorri init
+nix-shell shell.nix
+```
+# Purescript notes
+```
+spago repl
+```
+``` 
+git@github.com:rmsander/marl_ppo.git
+docker run -it --gpus 1 tensorflow/tensorflow:latest-gpu-jupyter
+docker run -it --gpus all tensorflow/tensorflow:latest-gpu-jupyter
+```
 # othello
 20210113 started
 - learning rate matters. 
@@ -82,22 +98,3 @@ python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8
 - start simple, debug env, network, agent, then can train one, then parallel train.
 - tf_agents is a good tool to work with RL
 20210209 8 parallel env training with tf_agents.
-
-# notes
-``` 
-git@github.com:rmsander/marl_ppo.git
-docker run -it --gpus 1 tensorflow/tensorflow:latest-gpu-jupyter
-docker run -it --gpus all tensorflow/tensorflow:latest-gpu-jupyter
-```
-# Nix notes
-```
-nix-env -iA lorri
-nix-env -q
-lorri init
-nix-shell shell.nix
-```
-
-# Purescript notes
-```
-spago repl
-```
