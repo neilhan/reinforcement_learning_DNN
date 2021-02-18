@@ -2,8 +2,9 @@
 # a histogram model for the probability distribution of the Q-Value
 
 import logging
-import tensorflow as tf
+import sys
 
+import tensorflow as tf
 import tf_agents
 from tf_agents.networks import q_network, categorical_q_network
 from tf_agents.agents.dqn import dqn_agent
@@ -161,6 +162,8 @@ def _train_agent(num_iterations, agent, train_env, eval_env, replay_buffer_itr, 
             print('step = {0}: Average Return = {1:.2f} Best = {2:.2f}'.format(
                 step, avg_return, best_episode_return))
             returns.append(avg_return)
+        # flush stdout
+        sys.stdout.flush()
 
 
 def train_agent_and_save(board_size=8, random_rate=0.0):
