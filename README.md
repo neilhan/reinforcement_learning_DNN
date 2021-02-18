@@ -44,6 +44,8 @@ sudo apt install python3-dev python3-pip python3-venv python3-wheel -y
 sudo apt install python-opengl
 
 # venv. ubuntu needs the without-pip
+#    > sudo apt install python3-venv
+# or > pip3 install virtualenv 
 python -m venv env
 # python -m venv env --without-pip
 
@@ -71,6 +73,11 @@ python -m othello.service.tfagent_service
 # 2. start 8x8 training for tf_agents DQN
 python -m othello.players.tfagents_dqn.train_dqn_custom_net_6x6
 python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8
+# stdbuf -oL python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8 &>> ../__tf_agents__/8x8.log
+# stdbuf -oL python -m othello.players.tfagents_dqn.train_dqn_custom_net_8x8 ../__tf_agents__/8x8.log 2>&1
+
+# logrotate 
+logrotate log-truncate.cfg
 
 ``` 
 
