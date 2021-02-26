@@ -1,0 +1,6 @@
+autopep8
+numpy
+scikit-learn
+matplotlib
+tensorboard
+tensorflow
