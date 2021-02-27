@@ -18,15 +18,31 @@ from othello.game.GameBoard import GameBoard, GameMove, ResultOfAMove, PLAYER_1,
 app = Flask(__name__)
 api = Api(app)
 
+
 policy_dirs = {
     '6x6': './__tf_agents__/othello_6x6_dqn_lr_e4/policy',
     '8x8': './__tf_agents__/othello_8x8_dqn_lr_e4/policy',
+    '8x8_30M': './__tf_agents__/othello_8x8_dqn_lr_e4_30m/policy',
+    '8x8_20M': './__tf_agents__/othello_8x8_dqn_lr_e4_20m/policy',
+    '8x8_10M': './__tf_agents__/othello_8x8_dqn_lr_e4_10m/policy',
+    '8x8_6M': './__tf_agents__/othello_8x8_dqn_lr_e4_6m/policy',
+    '8x8_3M': './__tf_agents__/othello_8x8_dqn_lr_e4_3m/policy',
 }
+
 agent_policies = {
-    '8x8': None,
     '6x6': None,
-    '8x8_timestamp': 0,
+    '8x8': None,
+    '8x8_20M': None,
+    '8x8_10M': None,
+    '8x8_6M': None,
+    '8x8_3M': None,
     '6x6_timestamp': 0,
+    '8x8_timestamp': 0,
+    '8x8_30M_timestamp': 0,
+    '8x8_20M_timestamp': 0,
+    '8x8_10M_timestamp': 0,
+    '8x8_6M_timestamp': 0,
+    '8x8_3M_timestamp': 0,
 }
 
 

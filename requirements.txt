@@ -2,5 +2,6 @@ autopep8
 numpy
 scikit-learn
 matplotlib
+pandas
 tensorboard
 tensorflow

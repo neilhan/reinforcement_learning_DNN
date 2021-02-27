@@ -24,7 +24,6 @@ policy_dirs = {
     '8x8_30M': './__tf_agents__/othello_8x8_dqn_lr_e4_30m/policy',
     '8x8_20M': './__tf_agents__/othello_8x8_dqn_lr_e4_20m/policy',
     '8x8_10M': './__tf_agents__/othello_8x8_dqn_lr_e4_10m/policy',
-    '8x8_6M': './__tf_agents__/othello_8x8_dqn_lr_e4_6m/policy',
     '8x8_3M': './__tf_agents__/othello_8x8_dqn_lr_e4_3m/policy',
 }
 
@@ -33,14 +32,12 @@ agent_policies = {
     '8x8': None,
     '8x8_20M': None,
     '8x8_10M': None,
-    '8x8_6M': None,
     '8x8_3M': None,
     '6x6_timestamp': 0,
     '8x8_timestamp': 0,
     '8x8_30M_timestamp': 0,
     '8x8_20M_timestamp': 0,
     '8x8_10M_timestamp': 0,
-    '8x8_6M_timestamp': 0,
     '8x8_3M_timestamp': 0,
 }
 
@@ -125,75 +122,28 @@ def get_next_move(board: GameBoard, player_id, policy):
     return move
 
 
-def server_step(board: GameBoard, server_player_id, client_player_id) -> GameBoard:
-    if server_player_id == PLAYER_1:
-        valid_spots = board.possible_moves_player_1
-    else:
-        valid_spots = board.possible_moves_player_2
-
-    if len(valid_spots) == 0:
-        opponent_move = GameMove(pass_turn=True)
-    else:
-        # Let server pick a move
-        opponent_action_code = \
-            agent_client.agent_service_step(game_board=board.observe_board_2d(),
-                                            server_player_id=server_player_id,
-                                            client_player_id=client_player_id,
-                                            board_size=board.board_size)
-        opponent_move = GameMove.from_action_code(
-            opponent_action_code, board_size=board.board_size)
-        if ((opponent_move.pass_turn and len(valid_spots) > 0) or
-                (not opponent_move.pass_turn and not opponent_move.spot in valid_spots)):
-            print('******* server take random logic ******* ',
-                opponent_move.to_friendly_format())
-            opponent_move = GameMove(random.choice(valid_spots))
-    move = opponent_move
-    move_result = board.make_a_move(server_player_id, move)
-    board = move_result.new_game_board
-
-    if server_player_id == PLAYER_1:
-        print(f'Player X, move: {move.to_friendly_format()}')
-    else:
-        print(f'Player O, move: {move.to_friendly_format()}')
-    print(board)
-    print('--------------------')
-    return board
-
-
-def agent_step(board: GameBoard, player_id, policy) -> GameBoard:
+def step(board: GameBoard, player_id, policy) -> GameBoard:
     move = get_next_move(board, player_id, policy)
 
     move_result = board.make_a_move(player_id, move)
     board = move_result.new_game_board
 
-    if player_id == PLAYER_1:
-        print(f'Player X, move: {move.to_friendly_format()}')
-    else:
-        print(f'Player O, move: {move.to_friendly_format()}')
+    print(f'Player X, move: {move.to_friendly_format()}')
     print(board)
     print('--------------------')
     return board
 
 
-def fight(policy, agent_as_player_id) -> GameBoard:
+def fight(policy_1, policy_2) -> GameBoard:
     board_size = 8
     board = GameBoard(board_size=board_size, random_start=False)
-    if agent_as_player_id == PLAYER_1:
-        while not board.game_ended:
-            # player 1
-            board = agent_step(board, PLAYER_1, policy)
-            if board.game_ended:
-                break
-            # player 2
-            board = server_step(board, PLAYER_2, PLAYER_1)
-    else:
-        while not board.game_ended:
-            # player 1
-            board = server_step(board, PLAYER_1, PLAYER_2)
-            if board.game_ended:
-                break
-            # player 2
-            board = agent_step(board, PLAYER_2, policy)
+    while not board.game_ended:
+        # player 1
+        board = step(board, PLAYER_1, policy_1)
+        if board.game_ended:
+            break
+        # player 2
+        board = step(board, PLAYER_2, policy_2)
 
     return board
 
@@ -201,54 +151,49 @@ def fight(policy, agent_as_player_id) -> GameBoard:
 def get_args():
     # Get some basic command line arguements
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--policy', help='Which policy to be loaded as the agent', type=str, default='8x8_20M')
+    parser.add_argument('--p1', help='Player 1', type=str, default='8x8_20M')
+    parser.add_argument('--p2', help='Player 2', type=str, default='8x8_20M')
     parser.add_argument('--num_games', help='No. of games',
                         type=int, default=10)
     return parser.parse_args()
 
 
-def run_some_games(policy, as_player_id, num_games):
-    wins = {'agent': 0,
-            'server': 0,
-            'ties': 0,
+def run_some_games(player_1_name, player_1_policy,
+                   player_2_name, player_2_policy,
+                   num_games):
+    wins = {f'Player X {player_1_name}': 0,
+            f'Player O {player_2_name}': 0,
+            'Ties': 0,
             }
     for _ in range(num_games):
-        if as_player_id == PLAYER_1:
-            board = fight(policy, PLAYER_1)
-            if board.player_1_count > board.player_2_count:
-                wins['agent'] = wins['agent'] + 1
-                print('Player X won')
-            elif board.player_2_count > board.player_1_count:
-                wins['server'] = wins['server'] + 1
-                print('Player O won')
-            else:
-                wins['ties'] = wins['ties'] + 1
-            print('==================================')
+        board = fight(player_1_policy, player_2_policy)
+        if board.player_1_count > board.player_2_count:
+            wins[f'Player X {player_1_name}'] = wins[f'Player X {player_1_name}'] + 1
+            print('Player X won')
+        elif board.player_2_count > board.player_1_count:
+            wins[f'Player O {player_2_name}'] = wins[f'Player O {player_2_name}'] + 1
+            print('Player O won')
         else:
-            board = fight(policy, PLAYER_2)
-            if board.player_1_count < board.player_2_count:
-                wins['agent'] = wins['agent'] + 1
-                print('Player X won')
-            elif board.player_2_count < board.player_1_count:
-                wins['server'] = wins['server'] + 1
-                print('Player O won')
-            else:
-                wins['ties'] = wins['ties'] + 1
-            print('==================================')
+            wins['Ties'] = wins['Ties'] + 1
+        print('==================================')
     return wins
 
 
 def main():
     args = get_args()
 
-    policy = get_policy(args.policy)
+    policy_1 = get_policy(args.p1)
+    policy_2 = get_policy(args.p2)
 
-    wins_1 = run_some_games(policy, PLAYER_1, args.num_games)
-    wins_2 = run_some_games(policy, PLAYER_2, args.num_games)
+    wins_1 = run_some_games(args.p1, policy_1,
+                            args.p2, policy_2,
+                            args.num_games)
+    wins_2 = run_some_games(args.p2, policy_2,
+                            args.p1, policy_1,
+                            args.num_games)
 
-    print('Agent as Player X:', wins_1)
-    print('Agent as Player O:', wins_2)
+    print('Win counts:', wins_1)
+    print('Win counts:', wins_2)
 
     # demo_main(board_size=8, random_start=False)
 

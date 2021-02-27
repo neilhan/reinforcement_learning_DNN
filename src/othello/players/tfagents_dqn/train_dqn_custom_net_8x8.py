@@ -301,7 +301,7 @@ def main(*args, **kwargs):
                         # level=logging.DEBUG)
                         level=logging.INFO)
     train_main(board_size=8, random_rate=0.0,
-               as_player_2_rate=0.7
+               as_player_2_rate=0.8
                )
 
 
