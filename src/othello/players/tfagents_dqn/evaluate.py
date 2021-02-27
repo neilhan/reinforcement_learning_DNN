@@ -155,26 +155,42 @@ def get_args():
     return parser.parse_args()
 
 
+def run_some_games(player_1_name, player_1_policy,
+                   player_2_name, player_2_policy,
+                   num_games):
+    wins = {f'Player X {player_1_name}': 0,
+            f'Player O {player_2_name}': 0,
+            'Ties': 0,
+            }
+    for _ in range(num_games):
+        board = fight(player_1_policy, player_2_policy)
+        if board.player_1_count > board.player_2_count:
+            wins[f'Player X {player_1_name}'] = wins[f'Player X {player_1_name}'] + 1
+            print('Player X won')
+        elif board.player_2_count > board.player_1_count:
+            wins[f'Player O {player_2_name}'] = wins[f'Player O {player_2_name}'] + 1
+            print('Player O won')
+        else:
+            wins['Ties'] = wins['Ties'] + 1
+        print('==================================')
+    return wins
+
+
 def main():
     args = get_args()
 
     policy_1 = get_policy(args.p1)
     policy_2 = get_policy(args.p2)
 
-    wins = {f'Player X {args.p1}': 0,
-            f'Player O {args.p2}': 0,
-            }
-    for _ in range(args.num_games):
-        board = fight(policy_1, policy_2)
-        if board.player_1_count > board.player_2_count:
-            wins[f'Player X {args.p1}'] = wins[f'Player X {args.p1}'] + 1
-            print('Player X won')
-        elif board.player_2_count > board.player_1_count:
-            wins[f'Player O {args.p2}'] = wins[f'Player O {args.p2}'] + 1
-            print('Player O won')
-        print('==================================')
+    wins_1 = run_some_games(args.p1, policy_1,
+                            args.p2, policy_2,
+                            args.num_games)
+    wins_2 = run_some_games(args.p2, policy_2,
+                            args.p1, policy_1,
+                            args.num_games)
 
-    print('Win counts:', wins)
+    print('Win counts:', wins_1)
+    print('Win counts:', wins_2)
 
     # demo_main(board_size=8, random_start=False)
 
