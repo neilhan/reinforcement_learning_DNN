@@ -68,8 +68,8 @@ class OthelloEnv(py_environment.PyEnvironment):
         return obs
 
     def _reset(self) -> ts:
-        self._game.reset(random_reset=(
-            random.random() < self._random_rate))
+        self._game = GameBoard(board_size=self.board_size,
+                               random_start=random.random() < self._random_rate)
         self._episode_ended = False
         # random player_id
         # if random.random() < self._random_rate:
@@ -224,9 +224,11 @@ class OthelloEnv(py_environment.PyEnvironment):
             else:
                 valid_spots = self._game.possible_moves_player_2
 
-            if ((self._agent == None and not self._use_agent_service)
-                or (self._exploring_opponent
-                    and bool(random.choice([True, False, False, False])))):
+            if len(valid_spots) == 0:
+                opponent_move = GameMove(pass_turn=True)
+            elif ((self._agent == None and not self._use_agent_service)
+                  or (self._exploring_opponent
+                      and bool(random.choice([True, False, False, False])))):
                 if self._log_on:
                     print('******* Opponent random exploring.')
                 opponent_move = GameMove(random.choice(valid_spots))
