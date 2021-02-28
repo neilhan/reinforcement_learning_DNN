@@ -68,7 +68,7 @@ class OthelloEnv(py_environment.PyEnvironment):
         return obs
 
     def _reset(self) -> ts:
-        self._game = GameBoard(board_size=self.board_size,
+        self._game = GameBoard(board_size=self._game.board_size,
                                random_start=random.random() < self._random_rate)
         self._episode_ended = False
         self._player_id = PLAYER_1
