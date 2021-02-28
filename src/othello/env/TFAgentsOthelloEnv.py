@@ -71,6 +71,7 @@ class OthelloEnv(py_environment.PyEnvironment):
         self._game = GameBoard(board_size=self.board_size,
                                random_start=random.random() < self._random_rate)
         self._episode_ended = False
+        self._player_id = PLAYER_1
         # random player_id
         # if random.random() < self._random_rate:
         if random.random() < self._as_player_2_rate:
