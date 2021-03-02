@@ -3,6 +3,7 @@
 
 import logging
 import sys
+from datetime import datetime
 
 import tensorflow as tf
 import tf_agents
@@ -20,10 +21,9 @@ from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
 from othello.env.TFAgentsOthelloEnv import OthelloEnv
+from othello.game import GameBoard
 from othello.players.tfagents_dqn.CustomNN import CustomNN8x8
-
-
-tf.compat.v1.enable_v2_behavior()
+import othello.tf_utils as tf_utils
 
 
 def create_envs(board_size=8,
@@ -122,6 +122,21 @@ def collect_step(environment, policy, replay_buffer):
 # these. For more details see the drivers module.
 
 
+def rot90_trajectories(trajs, board_size=8):
+    observation = tf_utils.rot90_5d_batch(trajs.observation)
+    action = trajs.action
+    action_shape = action.shape
+    action = tf.reshape(action, [-1])
+    action = tf.map_fn(
+        fn=lambda a: GameBoard.GameMove.rot90_action_code(
+            a, board_size=board_size),
+        elems=action)
+    action = tf.reshape(action, action_shape)
+
+    trajs.replace(observation=observation, action=action)
+    return trajs
+
+
 def create_replay_buffer(train_env, agent):
     # replay_buffer - for data collection. so that training can use the collected Trajectory
     replay_buffer = \
@@ -130,7 +145,7 @@ def create_replay_buffer(train_env, agent):
                                                        max_length=replay_buffer_capacity)
     # Dataset generates trajectories with shape [BxTx...] where
     # T = n_step_update + 1.
-    dataset = replay_buffer.as_dataset(num_parallel_calls=3,
+    dataset = replay_buffer.as_dataset(num_parallel_calls=8,
                                        sample_batch_size=batch_size,
                                        num_steps=n_step_update + 1)  # .prefetch(3)
 
@@ -139,27 +154,46 @@ def create_replay_buffer(train_env, agent):
     return replay_buffer, replay_buffer_itr
 
 
-def _train_agent(num_iterations, agent, train_env, eval_env, replay_buffer_itr, replay_buffer):
+def _train_agent(num_batches, agent,
+                 train_env, eval_env,
+                 replay_buffer_itr, replay_buffer,
+                 board_size=8):
     # Evaluate the agent's policy once before training.
     avg_return, best_episode_return = compute_avg_return(eval_env,
                                                          agent.policy,
                                                          num_eval_episodes)
     returns = [avg_return]
 
-    for _ in range(num_iterations):
+    for _ in range(num_batches):
         # Collect a few steps using collect_policy and save to the replay buffer.
-        for _ in range(collect_steps_per_iteration):
+        for _ in range(collect_steps_per_batch):
             collect_step(train_env, agent.collect_policy, replay_buffer)
 
         # Sample a batch of data from the buffer and update the agent's network.
         # trajectories = replay_buffer.gather_all()
-        trajectories, unused_info = next(replay_buffer_itr)
-        train_loss = agent.train(trajectories)
+        trajectories_1, unused_info = next(replay_buffer_itr)
+        train_loss_1 = agent.train(trajectories_1)
+
+        # rotate 90 1st time
+        trajectories_2 = rot90_trajectories(
+            trajectories_1, board_size=board_size)
+        train_loss_2 = agent.train(trajectories_2)
+
+        # rotate 90 2rd time
+        trajectories_3 = rot90_trajectories(
+            trajectories_2, board_size=board_size)
+        train_loss_3 = agent.train(trajectories_3)
+
+        # rotate 90 3rd time
+        trajectories_4 = rot90_trajectories(
+            trajectories_3, board_size=board_size)
+        train_loss_4 = agent.train(trajectories_4)
 
         step = agent.train_step_counter.numpy()
 
         if step % log_interval == 0:
-            print('step = {0}: loss = {1}'.format(step, train_loss.loss))
+            print(
+                f'step = {step}: loss = {train_loss_1.loss}, {train_loss_2.loss}, {train_loss_3.loss}, {train_loss_4.loss}')
 
         if step % eval_interval == 0:
             avg_return, best_episode_return = compute_avg_return(eval_env,
@@ -205,9 +239,10 @@ def train_agent_and_save(board_size=8, random_rate=0.0, as_player_2_rate=0.5):
     for i in range(500):
         print('*****************************')
         # training ------------------------
-        _train_agent(num_iterations, agent, train_env,
-                     eval_env, replay_buffer_itr, replay_buffer)
-        print('============{0}=============='.format(i))
+        _train_agent(num_batches, agent, train_env,
+                     eval_env, replay_buffer_itr, replay_buffer,
+                     board_size=board_size)
+        print(f'============{i}==============')
 
         # Save agent checkpointe ------------------------
         # save checkpoint
@@ -220,7 +255,10 @@ def train_agent_and_save(board_size=8, random_rate=0.0, as_player_2_rate=0.5):
         # demo -----------
         demo_game_play(agent.policy, eval_env, eval_py_env,
                        random_rate=random_rate)
-        print('============{0}=============='.format(i))
+        now = datetime.now()
+        dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+        print(f'Saved policy and training checkpoint. {dt_string}')
+        print(f'============{i}==============')
 
     return agent, eval_env, eval_py_env
 
@@ -239,11 +277,13 @@ def demo_game_play(agent_policy, eval_env, eval_py_env, random_rate=0.0):
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
                         level=logging.INFO)
-    num_episodes = 3
-    for _ in range(num_episodes):
+
+    old_log_on = eval_py_env._log_on
+    old_random_rate = eval_py_env._random_rate
+
+    for _ in range(3):
         time_step = eval_env.reset()
         eval_py_env._log_on = True
-        eval_py_env._exploring_opponent = False
         eval_py_env._random_rate = random_rate
 
         while not time_step.is_last():
@@ -252,6 +292,9 @@ def demo_game_play(agent_policy, eval_env, eval_py_env, random_rate=0.0):
             # print('--------', time_step)
 
         print('==============================')
+    # reset eval_env
+    eval_py_env._log_on = old_log_on
+    eval_py_env._random_rate = old_random_rate
 
 
 # ------------------------------------------------------------
@@ -259,10 +302,10 @@ checkpoint_dir = './__tf_agents__/othello_8x8_dqn_lr_e4/checkpoint'
 policy_dir = './__tf_agents__/othello_8x8_dqn_lr_e4/policy'
 
 # num_iterations = 105_000  # @param {type:"integer"}
-num_iterations = 5_000  # @param {type:"integer"}
 
 num_random_collect_steps = 10  # @param {type:"integer"}
-collect_steps_per_iteration = 1  # @param {type:"integer"}
+num_batches = 5_000  # @param {type:"integer"}
+collect_steps_per_batch = 1  # @param {type:"integer"}
 replay_buffer_capacity = 100000  # @param {type:"integer"}
 
 # conv_layer_params = [(32, 2, 1), ]
@@ -297,13 +340,18 @@ def demo_main(board_size=8, random_rate=0.0):
 
 
 def main(*args, **kwargs):
+    now = datetime.now()
+    dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(f'starting {dt_string}')
+    print('-----------------------------------------------')
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
                         level=logging.INFO)
-    train_main(board_size=8, random_rate=0.0,
-               as_player_2_rate=0.8
-               )
+    train_main(board_size=8,
+               random_rate=0.0,
+               as_player_2_rate=0.5)
 
 
 if __name__ == '__main__':
+    tf.compat.v1.enable_v2_behavior()
     tf_agents.system.multiprocessing.handle_main(main)

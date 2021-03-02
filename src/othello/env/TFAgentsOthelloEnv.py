@@ -26,7 +26,7 @@ class OthelloEnv(py_environment.PyEnvironment):
     def __init__(self, board_size=8,
                  random_rate=0.0,
                  as_player_2_rate=0.0,
-                 agent=None, use_agent_service=False):
+                 use_agent_service=False):
         self._agent = None  # will need to set after Agent created
         self._use_agent_service = use_agent_service
         self._game: GameBoard = GameBoard(board_size=board_size,
@@ -34,7 +34,6 @@ class OthelloEnv(py_environment.PyEnvironment):
         self._episode_ended = self._game.game_ended
         self._player_id = PLAYER_1
         self._log_on = False
-        self._exploring_opponent = True
         self._random_rate = random_rate
         self._as_player_2_rate = as_player_2_rate
 
@@ -57,9 +56,11 @@ class OthelloEnv(py_environment.PyEnvironment):
     def observation_spec(self):
         return self._observation_spec
 
-    def _get_observation(self, player_id):
-        obs = np.array(self._game.observe_board_2d(),
-                       dtype=np.float32).reshape(self._game.board_size, self._game.board_size, 1)
+    def _get_observation(self, player_id, game: GameBoard = None):
+        if game is None:
+            game = self._game
+        obs = np.array(game.observe_board_2d(),
+                       dtype=np.float32).reshape(game.board_size, game.board_size, 1)
         #    dtype=np.float32).reshape(9)
         # flip the -1 or 1 for the spot pieces
         obs = obs * player_id
@@ -149,31 +150,29 @@ class OthelloEnv(py_environment.PyEnvironment):
         return (p1_winning_count == 0)
 
     def _build_ts_invalid_move(self, move_result: ResultOfAMove):
+        game = move_result.new_game_board
         reward = -500.0
         self._episode_ended = True
         return_ts = \
-            ts.termination(self._get_observation(self._player_id),
+            ts.termination(self._get_observation(self._player_id, game),
                            reward=reward)
         return return_ts
 
     def _build_ts_game_ended(self, move_result: ResultOfAMove):
+        game = move_result.new_game_board
         reward = 0  # default to tie
+        win_extra_reward = (abs(game.player_1_count - game.player_2_count) * 100
+                            / (game.player_1_count + game.player_2_count))
         if self._is_player_winning(self._player_id):
-            reward = 100 + (abs(self._game.player_1_count -
-                                self._game.player_2_count) * 100
-                            / (self._game.player_1_count -
-                               self._game.player_2_count))
+            reward = 100 + win_extra_reward
         elif self._is_game_tie():
             reward = 0
         else:
-            reward = -100 - (abs(self._game.player_1_count -
-                                 self._game.player_2_count) * 100
-                             / (self._game.player_1_count -
-                                self._game.player_2_count))
+            reward = -100 - win_extra_reward
 
         # return termination time_step
         return_ts = \
-            ts.termination(self._get_observation(self._player_id),
+            ts.termination(self._get_observation(self._player_id, game),
                            reward)
         return return_ts
 
@@ -185,7 +184,8 @@ class OthelloEnv(py_environment.PyEnvironment):
         if opponent_result.game_ended:
             return_ts = self._build_ts_game_ended(opponent_result)
         else:
-            return_ts = ts.transition(self._get_observation(self._player_id),
+            return_ts = ts.transition(self._get_observation(self._player_id,
+                                                            opponent_result.new_game_board),
                                       reward=1,  # alway reward _player_id with 1 if a move is valid
                                       discount=1.0)
 
@@ -227,11 +227,9 @@ class OthelloEnv(py_environment.PyEnvironment):
 
             if len(valid_spots) == 0:
                 opponent_move = GameMove(pass_turn=True)
-            elif ((self._agent == None and not self._use_agent_service)
-                  or (self._exploring_opponent
-                      and bool(random.choice([True, False, False, False])))):
+            elif self._agent == None and not self._use_agent_service:
                 if self._log_on:
-                    print('******* Opponent random exploring.')
+                    print('******* Opponent random move.')
                 opponent_move = GameMove(random.choice(valid_spots))
             else:
                 # Let agent pick a move

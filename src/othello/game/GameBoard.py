@@ -3,6 +3,7 @@ import random
 
 import itertools
 import copy
+import tensorflow as tf
 
 PLAYER_1 = 1.0
 PLAYER_2 = -PLAYER_1
@@ -57,6 +58,15 @@ class Spot:
 
     def to_action_code(self):
         return self.row * self.board_size + self.col
+
+    @staticmethod
+    def rot90(action_code, board_size=8):
+        spot = Spot.from_action_code(action_code, board_size)
+        spot.row, spot.col = (
+            int(((spot.col - int(board_size/2))*(-1) + int(board_size/2))) -1,
+            spot.row,
+        )
+        return spot.to_action_code()
 
     def from_friendly_format(self, friendly_format: str) -> Spot:
         # returns Spot
@@ -139,11 +149,28 @@ class GameMove:
             return GameMove(pass_turn=True)
         else:
             return GameMove(spot=Spot.from_action_code(action_code, board_size))
+
+    def to_action_code(self, board_size=8):
+        if self.pass_turn == True:
+            return board_size*board_size
+        else:
+            return self.spot.to_action_code()
+
     def to_friendly_format(self):
         if self.pass_turn:
             return 'PASS'
         else:
             return self.spot.to_friendly_format()
+
+    @staticmethod
+    @tf.function
+    def rot90_action_code(action_code, board_size=8):
+        pass_code = board_size * board_size
+        if action_code == pass_code:
+            return action_code
+        else:
+            action_code_rot = Spot.rot90(action_code, board_size)
+            return int(action_code_rot)
 
 
 class ResultOfAMove:
