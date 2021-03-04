@@ -21,6 +21,7 @@ tf.compat.v1.enable_v2_behavior()
 policy_dirs = {
     '6x6': './__tf_agents__/othello_6x6_dqn_lr_e4/policy',
     '8x8': './__tf_agents__/othello_8x8_dqn_lr_e4/policy',
+    '8x8_33M': './__tf_agents__/othello_8x8_dqn_lr_e4_33m/policy',
     '8x8_30M': './__tf_agents__/othello_8x8_dqn_lr_e4_30m/policy',
     '8x8_20M': './__tf_agents__/othello_8x8_dqn_lr_e4_20m/policy',
     '8x8_10M': './__tf_agents__/othello_8x8_dqn_lr_e4_10m/policy',
@@ -31,12 +32,15 @@ policy_dirs = {
 agent_policies = {
     '6x6': None,
     '8x8': None,
+    '8x8_33M': None,
+    '8x8_30M': None,
     '8x8_20M': None,
     '8x8_10M': None,
     '8x8_6M': None,
     '8x8_3M': None,
     '6x6_timestamp': 0,
     '8x8_timestamp': 0,
+    '8x8_33M_timestamp': 0,
     '8x8_30M_timestamp': 0,
     '8x8_20M_timestamp': 0,
     '8x8_10M_timestamp': 0,

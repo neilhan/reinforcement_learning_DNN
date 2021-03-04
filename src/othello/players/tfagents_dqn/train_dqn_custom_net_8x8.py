@@ -349,7 +349,7 @@ def main(*args, **kwargs):
                         level=logging.INFO)
     train_main(board_size=8,
                random_rate=0.0,
-               as_player_2_rate=0.5)
+               as_player_2_rate=0.8)
 
 
 if __name__ == '__main__':
