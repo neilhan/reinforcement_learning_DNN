@@ -1,6 +1,8 @@
 import traceback
 import time
 
+import random
+
 from flask import Flask, request
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
@@ -89,7 +91,24 @@ def _to_tensor_observation(game_board, player_id, board_size):
     return obs
 
 
-def get_next_action(policy, game_board, player_id, board_size) -> ResultOfAMove:
+def get_next_action(policy, game_board, server_player_id, board_size, do_random=True) -> ResultOfAMove:
+    # do 0.05 random moves
+    if random.random() < 0.05 and do_random:
+        board = GameBoard(board_size=board_size)
+        board.board = game_board
+        board.update_status()
+
+        if server_player_id == PLAYER_1:
+            valid_spots = board.possible_moves_player_1
+        else:
+            valid_spots = board.possible_moves_player_2
+        if len(valid_spots) > 0:
+            move = GameMove(random.choice(valid_spots))
+            action_code = move.to_action_code(board_size)
+        else:
+            action_code = board_size*board_size
+        return action_code
+
     # player_2 move
     # time_step had to be constructed in this way, to work with loaded policy
     step_type = tf.convert_to_tensor([0], dtype=tf.int32, name='step_type')
@@ -100,7 +119,7 @@ def get_next_action(policy, game_board, player_id, board_size) -> ResultOfAMove:
                                     dtype=tf.float32,
                                     name='discount')
     observation = _to_tensor_observation(game_board,
-                                         player_id,
+                                         server_player_id,
                                          board_size)[None, :]
     opponent_ts = ts.TimeStep(step_type,
                               reward,
@@ -126,10 +145,14 @@ class Agent6x6(Resource):
         # request.method 'POST'
         # print('flask request:', request.json)
         policy = get_policy('6x6')
+        json_evaluate = request.json['evaluate']
+        do_random = False if (json_evaluate is None or str(
+            json_evaluate).upper() == 'FALSE') else True
         action_code = get_next_action(policy,
                                       request.json['game_board'],
                                       request.json['server_player_id'],
-                                      board_size=6)
+                                      board_size=6,
+                                      do_random=do_random)
         return {'action_code': action_code}
 
 
@@ -142,14 +165,19 @@ class Agent8x8(Resource):
         # query = conn.execute("select * from employees where EmployeeId =%d "  %int(employee_id))
         # result = {'data': [dict(zip(tuple (query.keys()) ,i)) for i in query.cursor]}
         # return jsonify(result)
+
     def post(self):
         # request.method 'POST'
         # print('flask request:', request.json)
         policy = get_policy('8x8')
+        json_evaluate = request.json['evaluate']
+        do_random = False if (json_evaluate is None or str(
+            json_evaluate).upper() == 'FALSE') else True
         action_code = get_next_action(policy,
                                       request.json['game_board'],
                                       request.json['server_player_id'],
-                                      board_size=8)
+                                      board_size=8,
+                                      do_random=do_random)
         return {'action_code': action_code}
 
 

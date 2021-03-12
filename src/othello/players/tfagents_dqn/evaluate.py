@@ -143,7 +143,8 @@ def server_step(board: GameBoard, server_player_id, client_player_id) -> GameBoa
             agent_client.agent_service_step(game_board=board.observe_board_2d(),
                                             server_player_id=server_player_id,
                                             client_player_id=client_player_id,
-                                            board_size=board.board_size)
+                                            board_size=board.board_size,
+                                            evaluate=True)
         opponent_move = GameMove.from_action_code(
             opponent_action_code, board_size=board.board_size)
         if ((opponent_move.pass_turn and len(valid_spots) > 0) or
@@ -233,10 +234,10 @@ def run_some_games(policy, as_player_id, num_games):
             board = fight(policy, PLAYER_2)
             if board.player_1_count < board.player_2_count:
                 wins['agent'] = wins['agent'] + 1
-                print('Player X won')
+                print('Player O won')
             elif board.player_2_count < board.player_1_count:
                 wins['server'] = wins['server'] + 1
-                print('Player O won')
+                print('Player X won')
             else:
                 wins['ties'] = wins['ties'] + 1
             print('==================================')

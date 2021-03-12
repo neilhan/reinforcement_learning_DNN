@@ -1,12 +1,14 @@
 import requests
 
 
-def agent_service_step(game_board, server_player_id, client_player_id, board_size):
+def agent_service_step(game_board, server_player_id, client_player_id, board_size,
+                       evaluate=False):
     request_json = {
         "client_player_id": client_player_id,
         "server_player_id": server_player_id,
         "board_size": board_size,
         "game_board": game_board,
+        "evaluate": evaluate,
     }
 
     resp = \
@@ -23,13 +25,13 @@ def agent_service_step(game_board, server_player_id, client_player_id, board_siz
 
 if __name__ == '__main__':
     action_code = agent_service_step(game_board=[[0, 0, 0, 0, 0, 0],
-                                      [0, 0, 0, 0, 0, 0],
-                                      [0, 0, 1, -1, 0, 0],
-                                      [0, 0, -1, 1, 0, 0],
-                                      [0, 0, 0, 0, 0, 0],
-                                      [0, 0, 0, 0, 0, 0],
-                                      ],
-                          server_player_id=-1,
-                          client_player_id=1,
-                          board_size=6)
+                                                 [0, 0, 0, 0, 0, 0],
+                                                 [0, 0, 1, -1, 0, 0],
+                                                 [0, 0, -1, 1, 0, 0],
+                                                 [0, 0, 0, 0, 0, 0],
+                                                 [0, 0, 0, 0, 0, 0],
+                                                 ],
+                                     server_player_id=-1,
+                                     client_player_id=1,
+                                     board_size=6)
     print('received action_code:', action_code)
