@@ -82,7 +82,7 @@ logrotate log-truncate.cfg
 # to run a few games with trained agents:
 # ! read othello.players.tfagents_dqn.evaluate.py. Agent policy is not checked into github.
 # Need to train them first.
-python -m othello.players.tfagents_dqn.evaluate --policy 8x8_10M
+python -m othello.players.tfagents_dqn.evaluate --num_games 50 --policy 8x8_10M
 
 ``` 
 

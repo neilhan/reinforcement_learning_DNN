@@ -63,7 +63,9 @@ class OthelloEnv(py_environment.PyEnvironment):
                        dtype=np.float32).reshape(game.board_size, game.board_size, 1)
         #    dtype=np.float32).reshape(9)
         # flip the -1 or 1 for the spot pieces
-        obs = obs * player_id
+        # ? is 0.0 and -0.0 the same?
+        obs = ((obs + 1) * player_id) - (player_id)
+        # obs = obs * player_id
         # obs = obs/3.0 + 0.5 # todo try without / 3 + 0.5
         obs = tf.convert_to_tensor(obs, dtype=tf.float32, name='observation')
         return obs
@@ -130,10 +132,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                         f'Player {self._player_id}, move: {move.to_friendly_format()}. Game Ends.')
                     print('^^^^^^^^^^^^^^^^^******^^^^^^^^^^^^^^^^^^^')
             else:  # game not end
-                if move_result.is_move_valid:
-                    return_ts = self._build_ts_opponent_turn(move_result)
-                else:  # end game and invalid move, very bad reward
-                    return_ts = self._build_ts_invalid_move(move_result)
+                return_ts = self._build_ts_opponent_turn(move_result)
 
         return return_ts
 
@@ -169,6 +168,11 @@ class OthelloEnv(py_environment.PyEnvironment):
             reward = 0
         else:
             reward = -100 - win_extra_reward
+        
+        # print('_build_ts_game_ended()')
+        # print('train as player:', self._player_id)
+        # print('reward:', reward)
+        # print(game)
 
         # return termination time_step
         return_ts = \
@@ -179,6 +183,7 @@ class OthelloEnv(py_environment.PyEnvironment):
     def _build_ts_opponent_turn(self, move_result: ResultOfAMove):
         return_ts = None
         opponent_result = self._opponent_take_turn()
+        self._game = opponent_result.new_game_board
         # opponent turn ended ---
         self._episode_ended = opponent_result.game_ended
         if opponent_result.game_ended:
@@ -193,8 +198,13 @@ class OthelloEnv(py_environment.PyEnvironment):
 
     def _opponent_take_turn(self) -> ResultOfAMove:
         # player_2 move
-        opponent_player_id = self._game.get_next_player(self._player_id)
-        if opponent_player_id == self._player_id:
+        opponent_player_id = self._game.get_opponent_of(self._player_id)
+        if opponent_player_id == PLAYER_1:
+            valid_spots = self._game.possible_moves_player_1
+        else:
+            valid_spots = self._game.possible_moves_player_2
+
+        if len(valid_spots) == 0:
             # opponent_has no moves. so return current state, reward and done.
             opponent_move = GameMove(pass_turn=True)
         else:  # otherwise, player_2, play a move.
@@ -218,16 +228,8 @@ class OthelloEnv(py_environment.PyEnvironment):
             # opponent_ts = ts.TimeStep(opponent_ts.step_type,
             #                           opponent_ts.reward,
             #                           opponent_ts.discount,
-            #                           opponent_ts.observation * self._player_id)
-
-            if opponent_player_id == PLAYER_1:
-                valid_spots = self._game.possible_moves_player_1
-            else:
-                valid_spots = self._game.possible_moves_player_2
-
-            if len(valid_spots) == 0:
-                opponent_move = GameMove(pass_turn=True)
-            elif self._agent == None and not self._use_agent_service:
+            #                           opponent_ts.observation * self._player_id) 
+            if self._agent == None and not self._use_agent_service:
                 if self._log_on:
                     print('******* Opponent random move.')
                 opponent_move = GameMove(random.choice(valid_spots))
@@ -242,6 +244,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                 else:
                     action_step = self._agent.policy.action(opponent_ts)
                     opponent_action_code = action_step.action.numpy().item()
+
                 opponent_move = GameMove.from_action_code(
                     opponent_action_code, board_size=self._game.board_size)
                 if ((opponent_move.pass_turn and len(valid_spots) > 0) or
@@ -250,7 +253,7 @@ class OthelloEnv(py_environment.PyEnvironment):
                         print('******* policy failed. random logic ******* ',
                               opponent_move.to_friendly_format())
                     opponent_move = GameMove(random.choice(valid_spots))
-        # opponent move...
+        # opponent make the move...
         opponent_result = self._game.make_a_move(opponent_player_id,
                                                  opponent_move)
         self._game = opponent_result.new_game_board

@@ -86,14 +86,16 @@ def _to_tensor_observation(game_board, player_id, board_size):
         board_size, board_size, 1)
     #    dtype=np.float32).reshape(9)
     # flip the -1 or 1 for the spot pieces
-    obs = obs * player_id
+    # ? is 0.0 and -0.0 the same?
+    obs = ((obs + 1) * player_id) - (player_id)
+    # obs = obs * player_id
     obs = tf.convert_to_tensor(obs, dtype=tf.float32, name='observation')
     return obs
 
 
 def get_next_action(policy, game_board, server_player_id, board_size, do_random=True) -> ResultOfAMove:
     # do 0.05 random moves
-    if random.random() < 0.05 and do_random:
+    if random.random() < 0.02 and do_random:
         board = GameBoard(board_size=board_size)
         board.board = game_board
         board.update_status()

@@ -10,5 +10,5 @@
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
     "python.formatting.provider": "autopep8",
-    "python.pythonPath": "venv/bin/python"
+    "python.pythonPath": "/home/nhan2/Projects/reinforcement_learning_DNN/venv/bin/python"
 }

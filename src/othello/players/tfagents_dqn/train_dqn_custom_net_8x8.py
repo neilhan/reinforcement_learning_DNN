@@ -254,7 +254,8 @@ def train_agent_and_save(board_size=8, random_rate=0.0, as_player_2_rate=0.5):
 
         # demo -----------
         demo_game_play(agent.policy, eval_env, eval_py_env,
-                       random_rate=random_rate)
+                       random_rate=random_rate,
+                       as_player_2_rate=as_player_2_rate)
         now = datetime.now()
         dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
         print(f'Saved policy and training checkpoint. {dt_string}')
@@ -272,7 +273,9 @@ def load_policy(policy_dir):
     return None
 
 
-def demo_game_play(agent_policy, eval_env, eval_py_env, random_rate=0.0):
+def demo_game_play(agent_policy, eval_env, eval_py_env,
+                   random_rate=0.0, as_player_2_rate=0.0):
+                   # as_player_2_rate is not used. eval_py_env has player2 rate set.
     # log game play
     logging.basicConfig(format='%(levelname)s:%(message)s',
                         # level=logging.DEBUG)
@@ -332,11 +335,13 @@ def train_main(board_size=8, random_rate=0.0,
                                                         as_player_2_rate=as_player_2_rate)
 
 
-def demo_main(board_size=8, random_rate=0.0):
+def demo_main(board_size=8, random_rate=0.0, as_player_2_rate=0.0):
     policy = load_policy(policy_dir)
     train_env, eval_env, train_py_env, eval_py_env = create_envs(
         board_size=board_size, random_rate=random_rate)
-    demo_game_play(policy, eval_env, eval_py_env, random_rate=random_rate)
+    demo_game_play(policy, eval_env, eval_py_env,
+                   random_rate=random_rate,
+                   as_player_2_rate=as_player_2_rate)
 
 
 def main(*args, **kwargs):
@@ -349,7 +354,8 @@ def main(*args, **kwargs):
                         level=logging.INFO)
     train_main(board_size=8,
                random_rate=0.0,
-               as_player_2_rate=0.5)
+               as_player_2_rate=1.7)
+               # set to 0.7, see whether it can find way out of quick-death plays.
 
 
 if __name__ == '__main__':
